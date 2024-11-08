@@ -119,15 +119,20 @@ const deleteMain = async (req, res) => {
 
 const searchMainItemOrSubItem = async (req, res) => {
   try {
-    const { itemName, subItemName } = req.query;
+    const { itemName, subItemName, workItemName } = req.query;
 
     const itemRegex = itemName ? new RegExp(itemName, "i") : null;
     const subItemRegex = subItemName ? new RegExp(subItemName, "i") : null;
+    const workItemRegex = workItemName ? new RegExp(workItemName, "i") : null;
 
     const matchConditions = [];
     if (itemRegex) matchConditions.push({ itemName: itemRegex });
     if (subItemRegex)
       matchConditions.push({ "subItems.subItemName": subItemRegex });
+    if (workItemRegex)
+      matchConditions.push({
+        "subItems.workItems.workItemName": workItemRegex,
+      });
 
     const boqItems = await MainItem.aggregate([
       {
@@ -139,7 +144,10 @@ const searchMainItemOrSubItem = async (req, res) => {
         },
       },
       {
-        $unwind: "$subItems",
+        $unwind: {
+          path: "$subItems",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
@@ -150,15 +158,21 @@ const searchMainItemOrSubItem = async (req, res) => {
         },
       },
       {
-        $group: {
-          _id: "$_id",
-          itemName: { $first: "$itemName" },
-          subItems: { $push: "$subItems" },
+        $unwind: {
+          path: "$subItems.workItems",
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $match: {
           $or: matchConditions,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          itemName: { $first: "$itemName" },
+          subItems: { $push: "$subItems" },
         },
       },
     ]);
@@ -171,7 +185,6 @@ const searchMainItemOrSubItem = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   addMainItem,

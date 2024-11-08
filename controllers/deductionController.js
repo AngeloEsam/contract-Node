@@ -1,6 +1,6 @@
 const Contract = require("../models/contractModel");
 const Deduction = require("../models/deductionModel");
-const workItemModel = require("../models/workItemModel");
+
 
 const addDeduction = async (req, res) => {
   const { contractId } = req.params;
@@ -34,21 +34,21 @@ const addDeduction = async (req, res) => {
     });
     await newDeduction.save();
 
-    const updatedTotal = contract.total - finalDeductionAmount;
-    const taxValue = (updatedTotal * contract.taxRate) / 100;
-    const downPaymentValue =
-      ((updatedTotal + taxValue) * contract.downPaymentRate) / 100;
-    const totalContractValue = updatedTotal + taxValue;
-    const dueAmount = totalContractValue - downPaymentValue;
+    //const updatedTotal = contract.total - finalDeductionAmount;
+    //const taxValue = (updatedTotal * contract.taxRate) / 100;
+    // const downPaymentValue =
+    //   ((updatedTotal + taxValue) * contract.downPaymentRate) / 100;
+    // const totalContractValue = updatedTotal + taxValue;
+    // const dueAmount = totalContractValue - downPaymentValue;
 
     const contractUpdated = await Contract.findByIdAndUpdate(
       contractId,
       {
-        total: updatedTotal,
-        taxValue,
-        downPaymentValue,
-        totalContractValue,
-        dueAmount,
+        // total: updatedTotal,
+        // taxValue,
+        // downPaymentValue,
+        // totalContractValue,
+        // dueAmount,
         $inc: { totalDeduction: finalDeductionAmount },
       },
       { new: true }

@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
     parentId:{type:mongoose.Schema.Types.ObjectId,ref:'User'},
     firstName: { type: String },
     secondName: { type: String },
-    companyName: { type: String },
+    companyName: { type: String,required: true},
     companySize: { type: String },
     companyType: { type: String, enum: ["Contractor", "Sub-Contractor"] },
     phone: { type: String },

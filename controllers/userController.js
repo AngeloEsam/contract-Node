@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv").config();
-const {v4:uuidv4}=require('uuid')
+const { v4: uuidv4 } = require("uuid");
 const { OAuth2Client } = require("google-auth-library");
 const clientGoogle = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 //regiser
@@ -86,22 +86,24 @@ const register = async (req, res) => {
 //login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { email, password, companyName } = req.body;
+    if (!email || !password || !companyName) {
       return res
         .status(400)
-        .json({ message: "Please enter email and password" });
+        .json({ message: "Please enter email and password and company name" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, companyName });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res
+        .status(401)
+        .json({ message: "Invalid email or password or company name" });
     }
+
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    await user.save();
 
     const token = jwt.sign(
       { _id: user._id, email: user.email, role: user.role },
@@ -142,6 +144,21 @@ const logout = async (req, res) => {
   }
 };
 
+const checkExpireToken = (req, res) => {
+  try {
+    const token = req.cookies?.jwtContracting;
+    if (!token) return res.status(401).json({ error: "token not found" });
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+      if (err) {
+        res.clearCookie("jwtContracting");
+        return res.status(401).json({ error: "token expired or invalid" });
+      }
+      return res.status(200).json({ message: "token is valid" });
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 const getAllUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -175,9 +192,9 @@ const getAllUsers = async (req, res) => {
 const profile = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId).select(
-      "-password -confirmPassword")
-      .populate('contracts');
+    const user = await User.findById(userId)
+      .select("-password -confirmPassword")
+      .populate("contracts");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -288,7 +305,7 @@ const googleAuth = async (req, res) => {
         firstName: given_name,
         secondName: family_name || "",
         role: "User",
-        password:uuidv4(),
+        password: uuidv4(),
         confirmPassword: "",
       });
       const data = await newUser.save();
@@ -309,9 +326,9 @@ const googleAuth = async (req, res) => {
         .json({
           message: "Created successfully",
           data,
-          token
+          token,
         });
-    }else{
+    } else {
       const token = jwt.sign(
         {
           _id: user._id,
@@ -324,12 +341,12 @@ const googleAuth = async (req, res) => {
         { expiresIn: "12h" }
       );
       res
-       .cookie("jwtContracting", token, { httpOnly: true, secure: true })
-       .status(200)
-       .json({
+        .cookie("jwtContracting", token, { httpOnly: true, secure: true })
+        .status(200)
+        .json({
           message: "Logged in successfully",
           data: user,
-          token
+          token,
         });
     }
   } catch (error) {
@@ -432,5 +449,6 @@ module.exports = {
   getSingleUser,
   updateUser,
   googleAuth,
-  addToUserGroup
+  addToUserGroup,
+  checkExpireToken
 };

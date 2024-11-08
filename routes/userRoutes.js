@@ -9,6 +9,7 @@ const {
   updateUser,
   googleAuth,
   addToUserGroup,
+  checkExpireToken,
 } = require("../controllers/userController.js");
 
 const express = require("express");
@@ -53,6 +54,8 @@ router.post("/addTenantToGroup", auth, addToUserGroup);
 router.post("/login", login);
 //logout
 router.post("/logout", logout);
+// check expiration token
+router.get("/checkToken", checkExpireToken);
 //login with google
 router.post("/googleLogin", googleAuth);
 //get all users
