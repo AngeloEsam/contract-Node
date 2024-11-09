@@ -61,8 +61,6 @@ const register = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
-        usersGroup: user.usersGroup,
-        parentId: user.parentId,
       },
       process.env.SECRET_KEY,
       {
@@ -112,8 +110,6 @@ const login = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
-        usersGroup: user.usersGroup,
-        parentId: user.parentId,
       },
       process.env.SECRET_KEY,
       { expiresIn: "2d" }
@@ -426,8 +422,6 @@ const addToUserGroup = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
-        usersGroup: user.usersGroup,
-        parentId: user.parentId,
       },
       process.env.SECRET_KEY,
       {

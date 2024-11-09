@@ -105,7 +105,7 @@ const getUserContracts = async (req, res) => {
         { path: "partner", select: "_id partnerName" },
       ],
     });
-
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -354,16 +354,7 @@ const getTenantContracts = async (req, res) => {
       return res.status(404).json({ message: "tenant not found" });
     }
     const parentUser = await User.findById(user.parentId).populate("contracts");
-    console.log(parentUser)
-    // if (parentUser.usersGroup.includes(user._id)) {
-    //   res.status(200).json({
-    //     contracts: parentUser.contracts,
-    //   });
-    // } else {
-    //   res
-    //     .status(403)
-    //     .json({ message: "You don't have permission to view this" });
-    // }
+    
     res.status(200).json({
       contracts: parentUser.contracts,
     });
