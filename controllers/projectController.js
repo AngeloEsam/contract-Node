@@ -1,7 +1,7 @@
 const Contract = require("../models/contractModel");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
-
+const mongoose = require("mongoose");
 const createProject = async (req, res) => {
   try {
     const { _id } = req.user;
@@ -98,17 +98,31 @@ const getUserProjects = async (req, res) => {
 const getAllProjects = async (req, res) => {
   try {
     const { _id } = req.user;
-    const projects = await Project.find({ userId: _id }).select(
-      "projectName projectManger status"
-    );
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const projects = await Project.find({ userId: _id })
+      .select("projectName projectManger status")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .exec();
+
     if (!projects.length) {
       return res
         .status(404)
         .json({ message: "No projects found for this user" });
     }
+    const totalProjects = await Project.countDocuments({ userId: _id });
+    const totalPages = Math.ceil(totalProjects / limit);
+
     res.status(200).json({
       message: "Projects fetched successfully",
       projects,
+      totalProjects,
+      totalPages,
+      currentPage: page,
     });
   } catch (error) {
     res.status(500).json({
@@ -117,6 +131,70 @@ const getAllProjects = async (req, res) => {
     });
   }
 };
+
+
+// const getAllProjects = async (req, res) => {
+//   try {
+//     const { _id, parentId } = req.user;  
+//     let allowedUsers = [_id];  
+//     console.log(parentId)
+
+//     if (parentId) {
+//       const mainCompany = await User.findById(parentId).populate("usersGroup");
+//       if (mainCompany && mainCompany.usersGroup) {
+//         console.log("Users in usersGroup:", mainCompany.usersGroup);
+//         allowedUsers = [
+//           ...allowedUsers,
+//           ...mainCompany.usersGroup.map((user) => user._id), 
+//         ];
+//       }
+//     }
+//     console.log("Allowed Users:", allowedUsers); 
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 5;
+//     const skip = (page - 1) * limit;
+
+//     const projects = await Project.find({
+//       $or: [
+//         { userId: new mongoose.Types.ObjectId(_id) },
+//         { userId: { $in: allowedUsers.map(id => new mongoose.Types.ObjectId(id)) } }
+//       ]
+//     })
+//       .select("projectName projectManger status")
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 })
+//       .exec();
+//     console.log(projects)
+//     if (!projects.length) {
+//       return res.status(404).json({ message: "No projects found for this user" });
+//     }
+
+//     const totalProjects = await Project.countDocuments({
+//       $or: [
+//         { userId: new mongoose.Types.ObjectId(_id) },
+//         { userId: { $in: allowedUsers.map(id => new mongoose.Types.ObjectId(id)) } }
+//       ]
+//     });
+//     const totalPages = Math.ceil(totalProjects / limit);
+
+//     res.status(200).json({
+//       message: "Projects fetched successfully",
+//       projects,
+//       totalProjects,
+//       totalPages,
+//       currentPage: page,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error fetching projects",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
 
 const deleteProject = async (req, res) => {
   const { projectId } = req.params;
@@ -207,7 +285,6 @@ const getUserGroupsOfNames = async (req, res) => {
   const { _id } = req.user;
   try {
     const user = await User.findById(_id).populate("usersGroup");
-    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -218,41 +295,14 @@ const getUserGroupsOfNames = async (req, res) => {
       message: "Groups fetched successfully",
       groups: groups,
     });
-  } catch (error) {}
-};
-
-const getProjectAndContractSummary = async (req, res) => {
-  try {
-    const { _id: userId } = req.user;
-    const projects = await Project.find({ userId }).populate({
-      path: "contracts",
-      select: "totalContractValue",
-    });
-    const projectCount = projects.length;
-    const totalContractValueSum = projects.reduce((total, project) => {
-      const contractValueSum = project.contracts.reduce((sum, contract) => {
-        return sum + (contract.totalContractValue || 0);
-      }, 0);
-      return total + contractValueSum;
-    }, 0);
-
-    res.status(200).json({
-      message: "Summary fetched successfully",
-      projectCount,
-      totalContractValue: totalContractValueSum,
-    });
   } catch (error) {
-    res.status(500).json({
-      message: "Error fetching summary",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error fetching groups", error: error.message });
   }
 };
 
 const getProjectStatusSummary = async (req, res) => {
   try {
     const totalProjects = await Project.countDocuments();
-
     const statusCounts = await Project.aggregate([
       {
         $group: {
@@ -272,10 +322,20 @@ const getProjectStatusSummary = async (req, res) => {
       },
     ]);
 
+    const projects = await Project.find().populate("contracts");
+
+    const totalContractValueSum = projects.reduce((total, project) => {
+      const contractValueSum = project.contracts.reduce((sum, contract) => {
+        return sum + (contract.totalContractValue || 0); 
+      }, 0);
+      return total + contractValueSum;
+    }, 0);
+
     res.status(200).json({
       message: "Project status summary fetched successfully",
       totalProjects,
       statusCounts,
+      totalContractValueSum,
     });
   } catch (error) {
     res.status(500).json({
@@ -307,7 +367,6 @@ module.exports = {
   getSingleProject,
   updateProject,
   getUserGroupsOfNames,
-  getProjectAndContractSummary,
   getProjectStatusSummary,
   searchProjects,
 };

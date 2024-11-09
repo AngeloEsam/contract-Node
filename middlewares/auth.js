@@ -11,11 +11,12 @@ exports.auth = async (req, res, next) => {
         .json({ message: "Please log in to access this resource" });
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    const user = await userModel.findById(decoded._id);
+    const user = await userModel.findById(decoded._id).populate("usersGroup");
     if (!user) {
       return res.status(401).json({ message: "User no longer exists" });
     }
     req.user = { ...decoded, _id: decoded._id };
+   // console.log(req.user);
 
     next();
   } catch (error) {

@@ -354,6 +354,7 @@ const getTenantContracts = async (req, res) => {
       return res.status(404).json({ message: "tenant not found" });
     }
     const parentUser = await User.findById(user.parentId).populate("contracts");
+    console.log(parentUser)
     // if (parentUser.usersGroup.includes(user._id)) {
     //   res.status(200).json({
     //     contracts: parentUser.contracts,

@@ -11,7 +11,6 @@ const {
   getSingleProject,
   updateProject,
   getUserGroupsOfNames,
-  getProjectAndContractSummary,
   getProjectStatusSummary,
   searchProjects,
 } = require("../controllers/projectController.js");
@@ -51,8 +50,6 @@ router.get("/", auth, getUserProjects);
 router.get("/all", auth, getAllProjects);
 //get names of userGroup
 router.get("/names", auth, getUserGroupsOfNames);
-//get Projects And totalContractValue for this user
-router.get("/count", auth, getProjectAndContractSummary);
 //get Project Status Summary
 router.get("/status", auth, getProjectStatusSummary);
 // search by project name or project manager or status

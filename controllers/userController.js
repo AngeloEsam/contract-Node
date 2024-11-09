@@ -61,6 +61,8 @@ const register = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
+        usersGroup: user.usersGroup,
+        parentId: user.parentId,
       },
       process.env.SECRET_KEY,
       {
@@ -106,7 +108,13 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { _id: user._id, email: user.email, role: user.role },
+      {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        usersGroup: user.usersGroup,
+        parentId: user.parentId,
+      },
       process.env.SECRET_KEY,
       { expiresIn: "2d" }
     );
@@ -418,6 +426,8 @@ const addToUserGroup = async (req, res) => {
         _id: user._id,
         email: user.email,
         role: user.role,
+        usersGroup: user.usersGroup,
+        parentId: user.parentId,
       },
       process.env.SECRET_KEY,
       {
@@ -450,5 +460,5 @@ module.exports = {
   updateUser,
   googleAuth,
   addToUserGroup,
-  checkExpireToken
+  checkExpireToken,
 };
