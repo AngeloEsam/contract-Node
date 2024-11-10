@@ -369,7 +369,6 @@ const addToUserGroup = async (req, res) => {
     confirmPassword,
     firstName,
     secondName,
-    companyName,
     companySize,
     companyType,
     phone,
@@ -396,13 +395,13 @@ const addToUserGroup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    const u=await User.findById(_id)
     const user = new User({
       role,
       email,
       firstName,
       secondName,
-      companyName,
+      companyName:u.companyName,
       companySize,
       companyType,
       phone,

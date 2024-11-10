@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
-const { auth } = require("../middlewares/auth.js");
+const { auth,globalUser } = require("../middlewares/auth.js");
 const {
   createProject,
   getUserProjects,
@@ -41,7 +41,6 @@ const upload = multer({
 });
 
 const router = express.Router();
-
 //create project
 router.post("/create", auth, upload.single("document"), createProject);
 //get projects for user

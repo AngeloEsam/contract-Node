@@ -30,7 +30,9 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-
+if(auth){
+  console.log('hello world')
+}
 router.get("/",auth, getContracts);
 router.get("/user",auth, getUserContracts);
 router.get("/tenant",auth, getTenantContracts);

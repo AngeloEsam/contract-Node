@@ -93,25 +93,48 @@ const getUserContracts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const user = await User.findById(userId).populate({
-      path: "contracts",
-      options: {
-        skip: skip,
-        limit: limit,
-        sort: { createdAt: -1 },
-      },
-      populate: [
-        { path: "project", select: "_id projectName" },
-        { path: "partner", select: "_id partnerName" },
-      ],
-    });
-    
+    let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const totalContracts = await User.findById(userId)
-      .populate("contracts")
-      .then((user) => user.contracts.length);
+    let contracts = [];
+    let parentUser;
+    let totalContracts;
+    if (user.parentId == null) {
+      user = await User.findById(userId).populate({
+        path: "contracts",
+        options: {
+          skip: skip,
+          limit: limit,
+          sort: { createdAt: -1 },
+        },
+        populate: [
+          { path: "project", select: "_id projectName" },
+          { path: "partner", select: "_id partnerName" },
+        ],
+      });
+      totalContracts = await User.findById(userId)
+        .populate("contracts")
+        .then((user) => user.contracts.length);
+    } else {
+      parentUser = await User.findById(user.parentId);
+      user = await User.findById(parentUser._id).populate({
+        path: "contracts",
+        options: {
+          skip: skip,
+          limit: limit,
+          sort: { createdAt: -1 },
+        },
+        populate: [
+          { path: "project", select: "_id projectName" },
+          { path: "partner", select: "_id partnerName" },
+        ],
+      });
+      totalContracts = await User.findById(parentUser._id)
+        .populate("contracts")
+        .then((user) => user.contracts.length);
+    }
+
     const totalPages = Math.ceil(totalContracts / limit);
     res.status(200).json({
       contracts: user.contracts,
@@ -253,9 +276,13 @@ const updateContract = async (req, res) => {
       consultant: req.body.consultant || contract.consultant,
     };
 
-    const updatedContract = await Contract.findByIdAndUpdate(contractId, updateData, {
-      new: true,
-    });
+    const updatedContract = await Contract.findByIdAndUpdate(
+      contractId,
+      updateData,
+      {
+        new: true,
+      }
+    );
 
     res.status(200).json({ data: updatedContract });
   } catch (error) {
@@ -354,7 +381,7 @@ const getTenantContracts = async (req, res) => {
       return res.status(404).json({ message: "tenant not found" });
     }
     const parentUser = await User.findById(user.parentId).populate("contracts");
-    
+
     res.status(200).json({
       contracts: parentUser.contracts,
     });

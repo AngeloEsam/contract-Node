@@ -1,11 +1,11 @@
 const Contract = require("../models/contractModel");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
-const mongoose = require("mongoose");
+
 const createProject = async (req, res) => {
   try {
     const { _id } = req.user;
-    const {
+    let {
       projectName,
       clientName,
       projectLocation,
@@ -24,16 +24,8 @@ const createProject = async (req, res) => {
       taskEndDate,
       status,
     } = req.body;
-    if (
-      !projectName ||
-      !clientName ||
-      !projectLocation ||
-      !projectManger ||
-      !teamMember
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Please fill in all required fields" });
+    if (typeof teamMember === "string") {
+      teamMember = teamMember.split(",");
     }
     const user = await User.findById(_id);
     if (!user) {
@@ -127,11 +119,6 @@ const getAllProjects = async (req, res) => {
       totalProjects = await Project.countDocuments({ userId: parentUser._id });
     }
     const totalPages = Math.ceil(totalProjects / limit);
-    if (!projects.length) {
-      return res
-        .status(404)
-        .json({ message: "No projects found for this user" });
-    }
     res.status(200).json({
       message: "Projects fetched successfully",
       projects,
@@ -180,7 +167,6 @@ const getSingleProject = async (req, res) => {
 
   try {
     const project = await Project.findOne({ _id: projectId, userId: _id });
-
     if (!project) {
       return res.status(404).json({
         message: "Project not found or you're not authorized to view it",

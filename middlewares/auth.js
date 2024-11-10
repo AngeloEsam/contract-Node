@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
 
-
 exports.auth = async (req, res, next) => {
   try {
     const token = req.cookies.jwtContracting;
@@ -16,8 +15,6 @@ exports.auth = async (req, res, next) => {
       return res.status(401).json({ message: "User no longer exists" });
     }
     req.user = { ...decoded, _id: decoded._id };
-   // console.log(req.user);
-
     next();
   } catch (error) {
     res.status(400).json({ error: error.message });
