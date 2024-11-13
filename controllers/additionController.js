@@ -34,20 +34,20 @@ const addAddition = async (req, res) => {
     });
     await newAddition.save();
 
-    const updatedTotal = contract.total + finalAdditionAmount;
-    const taxValue = (updatedTotal * contract.taxRate) / 100;
-    const downPaymentValue = ((updatedTotal + taxValue) * contract.downPaymentRate) / 100;
-    const totalContractValue = updatedTotal + taxValue;
-    const dueAmount = totalContractValue - downPaymentValue;
+    // const updatedTotal = contract.total + finalAdditionAmount;
+    // const taxValue = (updatedTotal * contract.taxRate) / 100;
+    // const downPaymentValue = ((updatedTotal + taxValue) * contract.downPaymentRate) / 100;
+    // const totalContractValue = updatedTotal + taxValue;
+    // const dueAmount = totalContractValue - downPaymentValue;
 
     const contractUpdated = await Contract.findByIdAndUpdate(
       contractId,
       {
-        total: updatedTotal,
-        taxValue,
-        downPaymentValue,
-        totalContractValue,
-        dueAmount,
+        // total: updatedTotal,
+        // taxValue,
+        // downPaymentValue,
+        // totalContractValue,
+        // dueAmount,
         $inc: { totalAddition: finalAdditionAmount },
       },
       { new: true }

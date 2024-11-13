@@ -390,6 +390,47 @@ const getTenantContracts = async (req, res) => {
   }
 };
 
+const searchContracts = async (req, res) => {
+  try {
+    const userId = req.user._id;  
+    const { project, partner, status, contractType } = req.query;
+    const query = { userId };
+    const orConditions = [];
+
+    if (status) orConditions.push({ status: new RegExp(status, "i") });
+    if (contractType) orConditions.push({ contractType: new RegExp(contractType, "i") });
+
+    if (partner) {
+      orConditions.push({ "partner.partnerName": new RegExp(partner, "i") });
+    }
+    if (project) {
+      orConditions.push({ "project.projectName": new RegExp(project, "i") });
+    }
+
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
+    }
+
+    console.log("Query to DB:", query);
+
+    const contracts = await Contract.find(query)
+      .populate("partner", "partnerName")
+      .populate("project", "projectName")
+      .lean();
+
+    console.log("Contracts retrieved from DB:", contracts);
+    res.status(200).json({
+      message: "Contracts fetched successfully",
+      contracts: contracts,
+    });
+  } catch (error) {
+    console.error("Error searching contracts:", error);
+    res.status(500).json({ message: "Error searching contracts" });
+  }
+};
+
+
+
 module.exports = {
   createContract,
   getContracts,
@@ -400,4 +441,5 @@ module.exports = {
   getUserContracts,
   getPreviousItemNamesByUser,
   getTenantContracts,
+  searchContracts,
 };
