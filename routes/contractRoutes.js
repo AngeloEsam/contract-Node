@@ -13,7 +13,7 @@ const {
   getPreviousItemNamesByUser,
   getTenantContracts,
 } = require("../controllers/contractController");
-const { auth, auth1 } = require("../middlewares/auth");
+const { auth } = require("../middlewares/auth");
 const router = express.Router();
 //upload image
 const storage = multer.diskStorage({
@@ -30,9 +30,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-if(auth){
-  console.log('hello world')
-}
 router.get("/",auth, getContracts);
 router.get("/user",auth, getUserContracts);
 router.get("/tenant",auth, getTenantContracts);

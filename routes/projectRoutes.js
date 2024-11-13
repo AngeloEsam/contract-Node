@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
-const { auth,globalUser } = require("../middlewares/auth.js");
+const { auth } = require("../middlewares/auth.js");
 const {
   createProject,
   getUserProjects,
@@ -42,7 +42,7 @@ const upload = multer({
 
 const router = express.Router();
 //create project
-router.post("/create", auth, upload.single("document"), createProject);
+router.post("/create", auth, upload.array("documents", 10), createProject);
 //get projects for user
 router.get("/", auth, getUserProjects);
 //get all projects
@@ -58,5 +58,5 @@ router.get("/:projectId",auth, getSingleProject);
 //delete project
 router.delete("/:projectId", auth, deleteProject);
 //update project
-router.put('/:projectId', auth,upload.single('document'), updateProject);
+router.put('/:projectId', auth,upload.array("documents", 10), updateProject);
 module.exports = router;

@@ -369,8 +369,6 @@ const addToUserGroup = async (req, res) => {
     confirmPassword,
     firstName,
     secondName,
-    companySize,
-    companyType,
     phone,
   } = req.body;
   if (!role || !email || !password || !confirmPassword || !phone) {
@@ -395,15 +393,15 @@ const addToUserGroup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const u=await User.findById(_id)
+    const u = await User.findById(_id);
     const user = new User({
       role,
       email,
       firstName,
       secondName,
-      companyName:u.companyName,
-      companySize,
-      companyType,
+      companyName: u.companyName,
+      companySize: u.companySize,
+      companyType: u.companyType,
       phone,
       password: hashedPassword,
       parentId: _id,
@@ -416,23 +414,8 @@ const addToUserGroup = async (req, res) => {
       { $push: { usersGroup: user._id } },
       { new: true }
     );
-    const token = jwt.sign(
-      {
-        _id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.SECRET_KEY,
-      {
-        expiresIn: "2d",
-      }
-    );
+
     res
-      .cookie("jwtContracting", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-      })
       .status(201)
       .json({ user: user, message: "User registered successfully" });
   } catch (error) {

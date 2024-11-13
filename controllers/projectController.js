@@ -31,9 +31,9 @@ const createProject = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    let document = null;
-    if (req.file) {
-      document = req.file.filename;
+    let documents = [];
+    if (req.files && req.files.length > 0) {
+      documents = req.files.map((file) => file.filename);
     }
     const project = await Project.create({
       projectName,
@@ -53,7 +53,7 @@ const createProject = async (req, res) => {
       taskStartDate,
       taskEndDate,
       status,
-      document,
+      documents,
       userId: _id,
     });
     res
@@ -91,7 +91,7 @@ const getAllProjects = async (req, res) => {
   try {
     const userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     const user = await User.findById(userId);
     if (!user) {
@@ -200,8 +200,9 @@ const updateProject = async (req, res) => {
       project[key] = updatedFields[key];
     });
 
-    if (req.file) {
-      project.document = req.file.filename;
+    if (req.files && req.files.length > 0) {
+      const newDocuments = req.files.map((file) => file.filename);
+      project.documents = newDocuments;
     }
 
     await project.save();
@@ -222,6 +223,7 @@ const getUserGroupsOfNames = async (req, res) => {
   const { _id } = req.user;
   try {
     const user = await User.findById(_id).populate("usersGroup");
+    const parentName=user.firstName+" "+user.secondName
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -230,7 +232,7 @@ const getUserGroupsOfNames = async (req, res) => {
     );
     res.status(200).json({
       message: "Groups fetched successfully",
-      groups: groups,
+      groups: [...groups,parentName],
     });
   } catch (error) {
     res
@@ -243,7 +245,9 @@ const getProjectStatusSummary = async (req, res) => {
   try {
     const { _id } = req.user;
 
-    const projectsForUser = await Project.find({ userId: _id }).populate("contracts");
+    const projectsForUser = await Project.find({ userId: _id }).populate(
+      "contracts"
+    );
 
     const totalProjectsForUser = projectsForUser.length;
 
@@ -265,13 +269,15 @@ const getProjectStatusSummary = async (req, res) => {
           (sum, contract) => sum + (contract.totalContractValue || 0),
           0
         );
-        return total + contractValueSum; 
+        return total + contractValueSum;
       }
       return total;
     }, 0);
 
-    const precentage = 
-      projectsForUserCompleted + projectsForUserPlanning + projectsForUserProgress || 1;
+    const precentage =
+      projectsForUserCompleted +
+        projectsForUserPlanning +
+        projectsForUserProgress || 1;
 
     const countStatus = [
       {
@@ -306,22 +312,34 @@ const getProjectStatusSummary = async (req, res) => {
   }
 };
 
-
-
 const searchProjects = async (req, res) => {
   try {
+    const userId = req.user._id;
     const { projectName, projectManger, status } = req.query;
-    const query = {};
-    if (projectName) query.projectName = new RegExp(projectName, "i");
-    if (projectManger) query.projectManger = new RegExp(projectManger, "i");
-    if (status) query.status = new RegExp(status, "i");
+    const query = { userId };
+    const orConditions = [];
+
+    if (projectName)
+      orConditions.push({ projectName: new RegExp(projectName, "i") });
+    if (projectManger)
+      orConditions.push({ projectManger: new RegExp(projectManger, "i") });
+    if (status) orConditions.push({ status: new RegExp(status, "i") });
+
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
+    }
+
     const projects = await Project.find(query).lean();
-    res.status(200).json({ data: projects });
+    res.status(200).json({
+      message: "Projects fetched successfully",
+      data: projects,
+    });
   } catch (error) {
     console.error("Error searching projects:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 module.exports = {
   createProject,
   getUserProjects,

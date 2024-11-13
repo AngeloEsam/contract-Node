@@ -170,9 +170,26 @@ const searchMainItemOrSubItem = async (req, res) => {
       },
       {
         $group: {
-          _id: "$_id",
+          _id: {
+            mainItemId: "$_id",
+            subItemId: "$subItems._id",
+          },
           itemName: { $first: "$itemName" },
-          subItems: { $push: "$subItems" },
+          subItemName: { $first: "$subItems.subItemName" },
+          workItems: { $push: "$subItems.workItems" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.mainItemId",
+          itemName: { $first: "$itemName" },
+          subItems: {
+            $push: {
+              _id: "$_id.subItemId",
+              subItemName: "$subItemName",
+              workItems: "$workItems",
+            },
+          },
         },
       },
     ]);

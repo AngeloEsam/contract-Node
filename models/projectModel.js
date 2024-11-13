@@ -11,7 +11,7 @@ const projectSchema = new mongoose.Schema({
   budget: { type: Number, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  document: { type: String },
+  documents: [{ type: String }],
   mitigationStrategies: { type: String },
   impact: { type: String },
   potential: { type: String },
