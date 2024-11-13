@@ -392,13 +392,13 @@ const getTenantContracts = async (req, res) => {
 
 const searchContracts = async (req, res) => {
   try {
-    const userId = req.user._id;  
+    const userId = req.user._id;
     const { project, partner, status, contractType } = req.query;
-    const query = { userId };
     const orConditions = [];
 
     if (status) orConditions.push({ status: new RegExp(status, "i") });
-    if (contractType) orConditions.push({ contractType: new RegExp(contractType, "i") });
+    if (contractType)
+      orConditions.push({ contractType: new RegExp(contractType, "i") });
 
     if (partner) {
       orConditions.push({ "partner.partnerName": new RegExp(partner, "i") });
@@ -406,30 +406,30 @@ const searchContracts = async (req, res) => {
     if (project) {
       orConditions.push({ "project.projectName": new RegExp(project, "i") });
     }
-
-    if (orConditions.length > 0) {
-      query.$or = orConditions;
-    }
-
-    console.log("Query to DB:", query);
-
-    const contracts = await Contract.find(query)
-      .populate("partner", "partnerName")
-      .populate("project", "projectName")
-      .lean();
-
-    console.log("Contracts retrieved from DB:", contracts);
+    const userContracts = await User.findById(userId).populate({
+      path: "contracts",
+      populate: [
+        { path: "project", select: "_id projectName" },
+        { path: "partner", select: "_id partnerName" },
+      ],
+    });
+    const filteredContracts = userContracts.contracts.filter((contract) => {
+      return (
+        contract.project.projectName.match(new RegExp(project, "i")) ||
+        contract.partner.partnerName.match(new RegExp(partner, "i")) ||
+        contract.status.match(new RegExp(status, "i")) ||
+        contract.contractType.match(new RegExp(contractType, "i"))
+      );
+    });
     res.status(200).json({
       message: "Contracts fetched successfully",
-      contracts: contracts,
+      contracts: filteredContracts,
     });
   } catch (error) {
     console.error("Error searching contracts:", error);
     res.status(500).json({ message: "Error searching contracts" });
   }
 };
-
-
 
 module.exports = {
   createContract,
