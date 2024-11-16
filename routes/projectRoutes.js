@@ -13,6 +13,7 @@ const {
   getUserGroupsOfNames,
   getProjectStatusSummary,
   searchProjects,
+  duplicateProject,
 } = require("../controllers/projectController.js");
 
 //upload image
@@ -43,6 +44,8 @@ const upload = multer({
 const router = express.Router();
 //create project
 router.post("/create", auth, upload.array("documents", 10), createProject);
+//duplicate project
+router.post('/duplicate/:projectId', auth, duplicateProject);
 //get projects for user
 router.get("/", auth, getUserProjects);
 //get all projects
@@ -59,4 +62,5 @@ router.get("/:projectId",auth, getSingleProject);
 router.delete("/:projectId", auth, deleteProject);
 //update project
 router.put('/:projectId', auth,upload.array("documents", 10), updateProject);
+
 module.exports = router;

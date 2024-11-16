@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const contractSchema = new mongoose.Schema({
   taxValue: { type: Number, default: 0 },
   taxRate: { type: Number, default: 0 },
+  code: { type: String, unique: true, required: true },
   downPaymentValue: { type: Number, default: 0 },
   downPaymentRate: { type: Number, default: 0 },
   downPaymentType: {
@@ -14,9 +15,17 @@ const contractSchema = new mongoose.Schema({
     required: true,
     enum: ["Owner BOQ", "Sub-Contructor"],
   },
-  project:{ type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true },
-  partner: { type: mongoose.Schema.Types.ObjectId, ref: "Partner", required: true  },
-  consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Partner"},
+  project: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
+    required: true,
+  },
+  partner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Partner",
+    required: true,
+  },
+  consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Partner" },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   typeOfProgress: { type: String, required: true },

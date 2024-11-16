@@ -13,6 +13,7 @@ const {
   getPreviousItemNamesByUser,
   getTenantContracts,
   searchContracts,
+  getUserContractsCode,
 } = require("../controllers/contractController");
 const { auth } = require("../middlewares/auth");
 const router = express.Router();
@@ -33,6 +34,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 router.get("/",auth, getContracts);
 router.get("/user",auth, getUserContracts);
+router.get("/code",auth, getUserContractsCode);
 router.get("/tenant",auth, getTenantContracts);
 router.get("/search", auth, searchContracts);
 router.get("/:contractId",auth, getSingleContract);

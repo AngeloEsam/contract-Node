@@ -10,6 +10,7 @@ const createContract = async (req, res) => {
   try {
     const userId = req.user._id;
     const {
+      code,
       contractType,
       projectId,
       partnerId,
@@ -20,12 +21,13 @@ const createContract = async (req, res) => {
       status,
       description,
     } = req.body;
-    if (!contractType || !startDate || !endDate || !typeOfProgress) {
+    if (!contractType || !startDate || !endDate || !typeOfProgress || !code) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
     const newContract = new Contract({
+      code,
       contractType,
       project: projectId,
       partner: partnerId,
@@ -265,6 +267,7 @@ const updateContract = async (req, res) => {
     }
 
     const updateData = {
+      code: req.body.code || contract.code,
       contractType: req.body.contractType || contract.contractType,
       startDate: req.body.startDate || contract.startDate,
       endDate: req.body.endDate || contract.endDate,
@@ -296,19 +299,34 @@ const calculateTaxAndPayment = async (req, res) => {
   const { downPaymentValue, taxValue } = req.body;
 
   try {
-    const workItems = await workItemModel.find({ userId });
-
     let total = 0;
-    for (let i = 0; i < workItems.length; i++) {
-      total += workItems[i].workDetails.total;
-    }
+    const contract = await Contract.findById(contractId).populate({
+      path: "mainId",
+      sort: { createdAt: -1 },
+      populate: {
+        path: "subItems",
+        populate: {
+          path: "workItems",
+        },
+      },
+    });
+
+    console.log(contract);
+    contract.mainId.forEach((mainItem) => {
+      mainItem.subItems.forEach((subItem) => {
+        subItem.workItems.forEach((workItem) => {
+          total += workItem.workDetails.total;
+          console.log(total);
+        });
+      });
+    });
     console.log("Total before tax:", total);
     const finalTaxValue = taxValue || 0;
     const tax = (total * finalTaxValue) / 100;
     console.log("Calculated tax:", tax);
 
     const totalContractValue = total + tax;
-    const payment = (totalContractValue * (downPaymentValue || 0)) / 100;
+    const payment = (totalContractValue * downPaymentValue) / 100;
     const dueAmount = totalContractValue - payment;
     const existingContract = await Contract.findById(contractId);
     if (!existingContract) {
@@ -431,6 +449,42 @@ const searchContracts = async (req, res) => {
   }
 };
 
+const getUserContractsCode = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    let parentUser;
+    let totalContracts;
+    if (user.parentId == null) {
+      user = await User.findById(userId).populate({
+        path: "contracts",
+        select: "code _id",
+      });
+      totalContracts = await User.findById(userId)
+        .populate("contracts")
+        .then((user) => user.contracts.length);
+    } else {
+      parentUser = await User.findById(user.parentId);
+      user = await User.findById(parentUser._id).populate({
+        path: "contracts",
+        select: "code _id",
+      });
+      totalContracts = await User.findById(parentUser._id)
+        .populate("contracts")
+        .then((user) => user.contracts.length);
+    }
+    res.status(200).json({
+      contracts: user.contracts,
+      totalContracts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   createContract,
   getContracts,
@@ -442,4 +496,5 @@ module.exports = {
   getPreviousItemNamesByUser,
   getTenantContracts,
   searchContracts,
+  getUserContractsCode,
 };

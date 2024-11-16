@@ -10,6 +10,7 @@ const subRoutes = require("./routes/subItemRoutes");
 const workRoutes = require("./routes/workItemRoutes");
 const deductionRoutes = require("./routes/deductionRoutes");
 const additionRoutes = require("./routes/additionRoutes");
+const workConfirmationRoutes = require("./routes/workConfirmationRoutes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/sub", subRoutes);
 app.use("/api/work", workRoutes);
 app.use("/api/deduction", deductionRoutes);
 app.use("/api/addition", additionRoutes);
+app.use('/api/workConfirmation', workConfirmationRoutes);
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));

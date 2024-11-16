@@ -340,6 +340,36 @@ const searchProjects = async (req, res) => {
   }
 };
 
+const duplicateProject = async (req, res) => {
+  try {
+    const userId = req.user._id;  
+    const { projectId } = req.params;
+
+    const originalProject = await Project.findById(projectId);
+    if (!originalProject) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    const duplicatedProject = new Project({
+      ...originalProject.toObject(),  
+      projectName: `${originalProject.projectName} - Copy`,  
+      userId: userId, 
+      _id: undefined,
+      contracts: [],
+    });
+
+    await duplicatedProject.save();
+    res.status(201).json({
+      message: "Project duplicated successfully",
+      project: duplicatedProject,
+    });
+  } catch (error) {
+    console.error("Error duplicating project:", error);
+    res.status(500).json({ message: "Error duplicating project" });
+  }
+};
+
+
+
 module.exports = {
   createProject,
   getUserProjects,
@@ -350,4 +380,5 @@ module.exports = {
   getUserGroupsOfNames,
   getProjectStatusSummary,
   searchProjects,
+  duplicateProject
 };
