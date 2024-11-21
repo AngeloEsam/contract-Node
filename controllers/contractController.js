@@ -462,7 +462,11 @@ const getUserContractsCode = async (req, res) => {
     if (user.parentId == null) {
       user = await User.findById(userId).populate({
         path: "contracts",
-        select: "code _id",
+        select: "code _id contractType partner project",
+        populate: [
+          { path: "project", select: "projectName" },
+          { path: "partner", select: "partnerName" },
+        ],
       });
       totalContracts = await User.findById(userId)
         .populate("contracts")

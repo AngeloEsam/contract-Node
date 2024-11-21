@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const workConfirmationSchema = new mongoose.Schema({
   withContract: { type: Boolean, default: false },
   contractId: { type: mongoose.Schema.Types.ObjectId, ref: "Contract" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   contractType: { type: String, required: true },
   projectName: { type: String },
   partner: { type: String },
@@ -20,6 +21,8 @@ const workConfirmationSchema = new mongoose.Schema({
   status: { type: String, required: true },
   activateInvoicingByPercentage: { type: Boolean, default: false },
   completionPercentage: { type: Boolean, default: false },
+},{
+    timestamps: true,
 });
 
 module.exports = mongoose.model("WorkConfirmation", workConfirmationSchema);
