@@ -441,7 +441,6 @@ const insertSheet = async (req, res) => {
       await subItem.save();
     }
 
-    // تحديث إجمالي العقد وقيمة الضريبة والدفعة المقدمة
     const updatedTotal = contract.total + totalOfTotal;
     const taxValue = (updatedTotal * (contract.taxRate || 0)) / 100;
     const downPaymentValue =
@@ -847,12 +846,10 @@ const getWorkItemsForContract = async (req, res) => {
       item.subItems.map((sub) => {
         sub.workItems.map(async (workId) => {
           workItemss.push(workId);
-          //workItemss=[...workItemss,await WorkItem.findById(workId)];
         });
       });
     });
     const workItemsss = await WorkItem.find({ _id: { $in: workItemss } });
-    console.log("workkkkkk", workItemss);
     res.status(201).json({ data: workItemsss });
   } catch (e) {
     return res.status(400).json({ message: e.message });
