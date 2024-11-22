@@ -208,6 +208,44 @@ const updateWorkItem = async (req, res) => {
   }
 };
 
+const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      previousQuantity,
+      currentQuantity,
+      totalOfQuantityAndPrevious,
+      netAmount,
+    } = req.body;
+    const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
+      id,
+      {
+        previousQuantity,
+        currentQuantity,
+        totalOfQuantityAndPrevious,
+        netAmount,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!updateWorkDetailsItem) {
+      return res.status(404).json({ message: "Work Details Item not found" });
+    }
+
+    res.status(200).json({
+      message: "Work Item updated successfully!",
+      data: updateWorkDetailsItem,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Work Item",
+      error: error.message,
+    });
+  }
+};
+
 const deleteWork = async (req, res) => {
   try {
     const { id } = req.params;
@@ -865,6 +903,7 @@ module.exports = {
   insertSheet,
   addSingleBoq,
   getWorkItemsForContract,
+  updateWorkItemBaseOnWorkConfirmation
 };
 
 // const deleteBoq = async (req, res) => {

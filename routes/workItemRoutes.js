@@ -12,6 +12,7 @@ const {
   getWorkItemTotals,
   addSingleBoq,
   getWorkItemsForContract,
+  updateWorkItemBaseOnWorkConfirmation,
 } = require("../controllers/workItemController");
 const { auth } = require("../middlewares/auth");
 const storage = multer.diskStorage({
@@ -30,14 +31,15 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const router = express.Router();
 
-router.post("/boq/:contractId",auth, addSingleBoq);
+router.post("/boq/:contractId", auth, addSingleBoq);
 router.post("/:userId", addWorkDetailsItem);
-router.post("/sheet/:contractId",auth,upload.single('file'), insertSheet);
+router.post("/sheet/:contractId", auth, upload.single("file"), insertSheet);
 router.get("/", getAllWorkItems);
-router.get("/:contractId",auth, getWorkItemsForContract);
+router.get("/:contractId", auth, getWorkItemsForContract);
 router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
+router.put("/workConfirmation/:id", auth, updateWorkItemBaseOnWorkConfirmation);
 router.delete("/:id", deleteWork);
 //router.delete("/boq/:contractId/:mainItemId", auth, deleteBoq);
 

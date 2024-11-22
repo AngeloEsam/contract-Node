@@ -39,9 +39,23 @@ const createWorkConfirmation = async (req, res) => {
 };
 const getAllWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
   try {
-    const workConfirmations = await WorkConfirmation.find({ userId: userId });
-    res.status(200).json({ data: workConfirmations });
+    const workConfirmations = await WorkConfirmation.find({ userId: userId })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .exec();
+    const totalWorkConfirmations = await WorkConfirmation.countDocuments();
+    const totalPages = Math.ceil(totalWorkConfirmations / limit);
+    res.status(200).json({
+      totalWorkConfirmations,
+      totalPages,
+      currentPage: page,
+      data: workConfirmations,
+    });
   } catch (error) {
     res
       .status(500)
@@ -63,7 +77,7 @@ const getSingleWorkConfirmation = async (req, res) => {
         .json({ message: "Work confirmation not found or access denied" });
     }
 
-    res.status(200).json({data:workConfirmation});
+    res.status(200).json({ data: workConfirmation });
   } catch (error) {
     res
       .status(500)
