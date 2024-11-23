@@ -10,6 +10,8 @@ const createWorkConfirmation = async (req, res) => {
       startDate,
       endDate,
       workConfirmationType,
+      completionPercentage,
+      activateInvoicingByPercentage,
       status,
       projectName,
       partner,
@@ -24,6 +26,8 @@ const createWorkConfirmation = async (req, res) => {
       startDate,
       endDate,
       workConfirmationType,
+      completionPercentage,
+      activateInvoicingByPercentage,
       status,
       projectName,
       partner,
@@ -109,8 +113,36 @@ const deleteWorkConfirmation = async (req, res) => {
       .json({ message: "Error deleting the work confirmation", error });
   }
 };
+const updateWorkConfirmation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { totalNetAmount, totalDueAmount } = req.body;
+    const updateWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
+      id,
+      {
+        totalNetAmount,
+        totalDueAmount,
+      },
+      {
+        new: true,
+      }
+    );
 
+    if (!updateWorkConfirmation) {
+      return res.status(404).json({ message: "work Confirmation not found" });
+    }
 
+    res.status(200).json({
+      message: "Work Confirmation Update successfully!",
+      data: updateWorkConfirmation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Work Confirmation",
+      error: error.message,
+    });
+  }
+};
 // const addAdditionWorkConfirmation = async (req, res) => {
 //   const { workConfirmationId } = req.params;
 //   const { _id: userId } = req.user;
@@ -167,4 +199,5 @@ module.exports = {
   getAllWorkConfirmation,
   getSingleWorkConfirmation,
   deleteWorkConfirmation,
+  updateWorkConfirmation,
 };
