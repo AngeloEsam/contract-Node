@@ -7,6 +7,7 @@ const mainItemModel = require("../models/mainItemModel");
 const additionModel = require("../models/additionModel");
 const deductionModel = require("../models/deductionModel");
 const Contract = require("../models/contractModel");
+const workConfirmationModel = require("../models/workConfirmationModel");
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -210,11 +211,12 @@ const updateWorkItem = async (req, res) => {
 
 const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id,workConfirmationId } = req.params;
     const {
       currentQuantity,
       totalOfQuantityAndPrevious,
       netAmount,
+      dueAmount,
       previousNetAmount,
       previousDueAmount,
     } = req.body;
@@ -225,6 +227,7 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
         currentQuantity,
         totalOfQuantityAndPrevious,
         netAmount,
+        dueAmount,
         previousNetAmount,
         previousDueAmount,
       },
@@ -232,7 +235,14 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
         new: true,
       }
     );
-
+    const contractUpdated = await workConfirmationModel.findByIdAndUpdate(
+      workConfirmationId,
+      {
+        $inc: { totalNetAmount: netAmount },
+        $inc: { totalDueAmount: dueAmount },
+      },
+      { new: true }
+    );
     if (!updateWorkDetailsItem) {
       return res.status(404).json({ message: "Work Details Item not found" });
     }

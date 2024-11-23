@@ -39,7 +39,11 @@ router.get("/:contractId", auth, getWorkItemsForContract);
 router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
-router.put("/workConfirmation/:id", auth, updateWorkItemBaseOnWorkConfirmation);
+router.put(
+  "/workConfirmation/:workConfirmationId/:id",
+  auth,
+  updateWorkItemBaseOnWorkConfirmation
+);
 router.delete("/:id", deleteWork);
 //router.delete("/boq/:contractId/:mainItemId", auth, deleteBoq);
 
