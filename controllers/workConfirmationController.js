@@ -110,6 +110,58 @@ const deleteWorkConfirmation = async (req, res) => {
   }
 };
 
+
+// const addAdditionWorkConfirmation = async (req, res) => {
+//   const { workConfirmationId } = req.params;
+//   const { _id: userId } = req.user;
+
+//   try {
+//     const {additionName, type, amount } = req.body;
+
+//     if (!additionName || !type || !amount || !workConfirmationId) {
+//       return res.status(400).json({ message: "All fields are required" });
+//     }
+
+//     const work = await WorkConfirmation.findById(workConfirmationId);
+//     if (!work) {
+//       return res.status(404).json({ message: "WorkConfirmation not found" });
+//     }
+
+//     let finalAdditionAmount;
+//     if (type === "Percentage %") {
+//       finalAdditionAmount = (work.totalNetAmount * amount) / 100;
+//     } else {
+//       finalAdditionAmount = amount;
+//     }
+
+//     const newAddition = new Addition({
+//       additionName,
+//       type,
+//       amount: finalAdditionAmount,
+//       userId,
+//       workConfirmationId,
+//     });
+//     await newAddition.save();
+//     const contractUpdated = await Contract.findByIdAndUpdate(
+//       contractId,
+//       {
+//         $inc: { totalAddition: finalAdditionAmount },
+//       },
+//       { new: true }
+//     );
+
+//     res.status(201).json({
+//       message: "Addition added and contract updated successfully!",
+//       data: newAddition,
+//       updatedContract: contractUpdated,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error adding Addition",
+//       error: error.message,
+//     });
+//   }
+// };
 module.exports = {
   createWorkConfirmation,
   getAllWorkConfirmation,

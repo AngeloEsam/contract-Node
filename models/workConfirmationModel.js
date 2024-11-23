@@ -22,8 +22,8 @@ const workConfirmationSchema = new mongoose.Schema(
     status: { type: String, required: true },
     activateInvoicingByPercentage: { type: Boolean, default: false },
     completionPercentage: { type: Boolean, default: false },
-    totalAmount: { type: Number, default: 0 },
-    dueAmount: { type: Number, default: 0 },
+    totalNetAmount: { type: Number, default: 0 },
+    totalDueAmount: { type: Number, default: 0 },
   },
   {
     timestamps: true,

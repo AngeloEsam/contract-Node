@@ -216,6 +216,8 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       currentQuantity,
       totalOfQuantityAndPrevious,
       netAmount,
+      previousNetAmount,
+      previousDueAmount,
     } = req.body;
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
@@ -224,6 +226,8 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
         currentQuantity,
         totalOfQuantityAndPrevious,
         netAmount,
+        previousNetAmount,
+        previousDueAmount,
       },
       {
         new: true,
@@ -903,7 +907,7 @@ module.exports = {
   insertSheet,
   addSingleBoq,
   getWorkItemsForContract,
-  updateWorkItemBaseOnWorkConfirmation
+  updateWorkItemBaseOnWorkConfirmation,
 };
 
 // const deleteBoq = async (req, res) => {

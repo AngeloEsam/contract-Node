@@ -40,7 +40,7 @@ const contractSchema = new mongoose.Schema({
   mainId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Main" }],
   // userId: { type: mongoose.Schema.Types.ObjectId,ref:'User', required: true },
   total: { type: Number, default: 0 },
-  totalOfNet:{ type: Number, default:0},
+  totalOfNet:{ type: Number, default:0},   //مش عارفين دلوقت workConfirmation or contract
   totalContractValue: { type: Number, default: 0 },
   dueAmount: { type: Number, default: 0 },
   totalDeduction: { type: Number, default: 0 },
