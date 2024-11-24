@@ -235,14 +235,18 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
         new: true,
       }
     );
-    const contractUpdated = await workConfirmationModel.findByIdAndUpdate(
-      workConfirmationId,
-      {
-        $inc: { totalNetAmount: netAmount },
-        $inc: { totalDueAmount: dueAmount },
-      },
-      { new: true }
-    );
+
+    const workConfirmationUpdated =
+      await workConfirmationModel.findByIdAndUpdate(
+        workConfirmationId,
+        {
+          $inc: {
+            totalNetAmount: netAmount,
+            totalDueAmount: dueAmount,
+          },
+        },
+        { new: true }
+      );
 
     res.status(200).json({
       message: "Work Item updated successfully!",
