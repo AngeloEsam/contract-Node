@@ -10,6 +10,8 @@ const subRoutes = require("./routes/subItemRoutes");
 const workRoutes = require("./routes/workItemRoutes");
 const deductionRoutes = require("./routes/deductionRoutes");
 const additionRoutes = require("./routes/additionRoutes");
+const additionWorkConfirmationRoutes = require("./routes/additionWorkConfirmation");
+const deductionWorkConfirmationRoutes = require("./routes/deductionWorkConfirmation");
 const workConfirmationRoutes = require("./routes/workConfirmationRoutes");
 const templateRoutes = require("./routes/templateRoutes");
 const cors = require("cors");
@@ -38,6 +40,8 @@ app.use("/api/sub", subRoutes);
 app.use("/api/work", workRoutes);
 app.use("/api/deduction", deductionRoutes);
 app.use("/api/addition", additionRoutes);
+app.use("/api/additionWorkConfirmation", additionWorkConfirmationRoutes);
+app.use("/api/deductionWorkConfirmation", deductionWorkConfirmationRoutes);
 app.use('/api/workConfirmation', workConfirmationRoutes);
 app.use('/api/templates', templateRoutes);
 //statics
