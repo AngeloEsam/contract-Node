@@ -37,6 +37,7 @@ const addAdditionWorkConfirmation = async (req, res) => {
         workConfirmationId,
         {
           $inc: { totalNetAmount: finalAdditionAmount },
+          $inc: { totalAddition: finalAdditionAmount },
         },
         { new: true }
       );

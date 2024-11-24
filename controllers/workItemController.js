@@ -211,7 +211,7 @@ const updateWorkItem = async (req, res) => {
 
 const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
   try {
-    const { id,workConfirmationId } = req.params;
+    const { id, workConfirmationId } = req.params;
     const {
       currentQuantity,
       totalOfQuantityAndPrevious,
@@ -243,9 +243,6 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       },
       { new: true }
     );
-    if (!updateWorkDetailsItem) {
-      return res.status(404).json({ message: "Work Details Item not found" });
-    }
 
     res.status(200).json({
       message: "Work Item updated successfully!",

@@ -37,6 +37,7 @@ const deductionWorkConfirmation = async (req, res) => {
         workConfirmationId,
         {
           $inc: { totalNetAmount: -finalDeductionAmount },
+          $inc: { totalDeduction: finalDeductionAmount },
         },
         { new: true }
       );
@@ -59,8 +60,10 @@ const getdeductionsWorkConfirmation = async (req, res) => {
   const { _id: userId } = req.user;
 
   try {
-    const deductions = await DeductionWorkConfirmation
-      .find({ workConfirmationId, userId })
+    const deductions = await DeductionWorkConfirmation.find({
+      workConfirmationId,
+      userId,
+    })
       .select("deductionName type amount createdAt")
       .sort({ createdAt: -1 });
 

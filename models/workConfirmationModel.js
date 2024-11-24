@@ -24,6 +24,8 @@ const workConfirmationSchema = new mongoose.Schema(
     completionPercentage: { type: Boolean, default: false },
     totalNetAmount: { type: Number, default: 0 },
     totalDueAmount: { type: Number, default: 0 },
+    totalDeduction: { type: Number, default: 0 },
+    totalAddition: { type: Number, default: 0 },
   },
   {
     timestamps: true,
