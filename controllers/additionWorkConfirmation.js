@@ -36,8 +36,10 @@ const addAdditionWorkConfirmation = async (req, res) => {
       await workConfirmationModel.findByIdAndUpdate(
         workConfirmationId,
         {
-          $inc: { totalNetAmount: finalAdditionAmount },
-          $inc: { totalAddition: finalAdditionAmount },
+          $inc: {
+            totalNetAmount: finalAdditionAmount, 
+            totalAddition: finalAdditionAmount, 
+          },
         },
         { new: true }
       );
@@ -60,8 +62,10 @@ const getAdditionsWorkConfirmation = async (req, res) => {
   const { _id: userId } = req.user;
 
   try {
-    const additions = await AdditionWorkConfirmation
-      .find({ workConfirmationId, userId })
+    const additions = await AdditionWorkConfirmation.find({
+      workConfirmationId,
+      userId,
+    })
       .select("additionName type amount createdAt")
       .sort({ createdAt: -1 });
 

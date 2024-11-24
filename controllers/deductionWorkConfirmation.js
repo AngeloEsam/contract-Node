@@ -36,8 +36,10 @@ const deductionWorkConfirmation = async (req, res) => {
       await workConfirmationModel.findByIdAndUpdate(
         workConfirmationId,
         {
-          $inc: { totalNetAmount: -finalDeductionAmount },
-          $inc: { totalDeduction: finalDeductionAmount },
+          $inc: { 
+            totalNetAmount: -finalDeductionAmount,
+            totalDeduction: finalDeductionAmount,
+          },
         },
         { new: true }
       );
