@@ -115,9 +115,44 @@ const deleteWorkConfirmation = async (req, res) => {
 };
 
 
+const updateWorkConfirmation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate, typeOfProgress, workConfirmationType } = req.body;
+    const userId = req.user._id;
+
+    const workConfirmation = await WorkConfirmation.findById(id);
+    if (!workConfirmation) {
+      return res.status(404).json({ message: "WorkConfirmation not found!" });
+    }
+
+    if (String(workConfirmation.userId) !== String(userId)) {
+      return res.status(403).json({ message: "Unauthorized to update this WorkConfirmation!" });
+    }
+
+    const updatedWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
+      id,
+      { startDate, endDate, typeOfProgress, workConfirmationType },
+      { new: true } 
+    );
+
+    res.status(200).json({
+      message: "WorkConfirmation updated successfully!",
+      data: updatedWorkConfirmation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating WorkConfirmation",
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   createWorkConfirmation,
   getAllWorkConfirmation,
   getSingleWorkConfirmation,
   deleteWorkConfirmation,
+  updateWorkConfirmation
 };

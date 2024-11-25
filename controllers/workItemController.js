@@ -220,10 +220,14 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       previousNetAmount,
       previousDueAmount,
     } = req.body;
+    const existingWorkItem = await WorkItem.findById(id);
+    if (!existingWorkItem) {
+      return res.status(404).json({ message: "Work Item not found!" });
+    }
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
       {
-        previousQuantity: currentQuantity,
+        previousQuantity: existingWorkItem.previousQuantity + currentQuantity,
         currentQuantity,
         totalOfQuantityAndPrevious,
         netAmount,
