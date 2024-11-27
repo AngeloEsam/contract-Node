@@ -118,7 +118,14 @@ const deleteWorkConfirmation = async (req, res) => {
 const updateWorkConfirmation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { startDate, endDate, typeOfProgress, workConfirmationType } = req.body;
+    const {
+      startDate,
+      endDate,
+      typeOfProgress,
+      workConfirmationType,
+      activateInvoicingByPercentage,
+      completionPercentage,
+    } = req.body;
     const userId = req.user._id;
 
     const workConfirmation = await WorkConfirmation.findById(id);
@@ -127,13 +134,22 @@ const updateWorkConfirmation = async (req, res) => {
     }
 
     if (String(workConfirmation.userId) !== String(userId)) {
-      return res.status(403).json({ message: "Unauthorized to update this WorkConfirmation!" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this WorkConfirmation!" });
     }
 
     const updatedWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
       id,
-      { startDate, endDate, typeOfProgress, workConfirmationType },
-      { new: true } 
+      {
+        startDate,
+        endDate,
+        typeOfProgress,
+        workConfirmationType,
+        activateInvoicingByPercentage,
+        completionPercentage,
+      },
+      { new: true }
     );
 
     res.status(200).json({

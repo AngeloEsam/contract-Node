@@ -244,6 +244,25 @@ const getSingleContract = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getSingleContractAhmed = async (req, res) => {
+  try {
+    const { contractId } = req.params;
+
+    if (!contractId) {
+      return res.status(400).json({ message: "Contract ID is required" });
+    }
+
+    const contract = await Contract.findById(contractId).select(
+      "-mainId -project -partner -typeOfProgress -status -description -consultant -contractType"
+    );
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    res.status(200).json({ data: contract });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const updateContract = async (req, res) => {
   try {
@@ -462,7 +481,7 @@ const getUserContractsCode = async (req, res) => {
     if (user.parentId == null) {
       user = await User.findById(userId).populate({
         path: "contracts",
-        select: "code _id contractType partner project",
+        select: "code _id contractType partner project startDate endDate",
         populate: [
           { path: "project", select: "projectName" },
           { path: "partner", select: "partnerName" },
@@ -501,4 +520,5 @@ module.exports = {
   getTenantContracts,
   searchContracts,
   getUserContractsCode,
+  getSingleContractAhmed,
 };

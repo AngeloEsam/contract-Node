@@ -28,6 +28,10 @@ const createPartner = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    const findEmail = await Partner.findOne({ email: email });
+    if (findEmail) {
+      return res.status(400).json({ message: "email already exist" });
+    }
     let image = null;
     if (req.file) {
       image = req.file.filename;

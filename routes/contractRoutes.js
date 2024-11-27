@@ -14,6 +14,7 @@ const {
   getTenantContracts,
   searchContracts,
   getUserContractsCode,
+  getSingleContractAhmed,
 } = require("../controllers/contractController");
 const { auth } = require("../middlewares/auth");
 const router = express.Router();
@@ -38,6 +39,7 @@ router.get("/code",auth, getUserContractsCode);
 router.get("/tenant",auth, getTenantContracts);
 router.get("/search", auth, searchContracts);
 router.get("/:contractId",auth, getSingleContract);
+router.get("/ahmed/:contractId", auth, getSingleContractAhmed);
 router.get('/user/previous-item-names', auth, getPreviousItemNamesByUser);
 router.post("/",auth, createContract);
 router.post("/calculate/:contractId",auth, calculateTaxAndPayment);
