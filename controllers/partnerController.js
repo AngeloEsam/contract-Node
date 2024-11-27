@@ -55,7 +55,7 @@ const getUserPartner = async (req, res) => {
   try {
     const { _id } = req.user;
     const partners = await Partner.find({ userId: _id }).select(
-      "partnerName id"
+      "partnerName id type"
     );
     if (!partners) {
       return res

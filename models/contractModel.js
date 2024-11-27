@@ -13,7 +13,7 @@ const contractSchema = new mongoose.Schema({
   contractType: {
     type: String,
     required: true,
-    enum: ["Owner BOQ", "Sub-Contructor"],
+    enum: ["Owner", "Sub-contractor"],
   },
   project: {
     type: mongoose.Schema.Types.ObjectId,

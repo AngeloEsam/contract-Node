@@ -47,12 +47,12 @@ const getAllWorkConfirmation = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   try {
-    const workConfirmations = await WorkConfirmation.find({ userId: userId })
+    const workConfirmations = await WorkConfirmation.find({ userId})
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
       .exec();
-    const totalWorkConfirmations = await WorkConfirmation.countDocuments();
+    const totalWorkConfirmations = await WorkConfirmation.countDocuments({userId});
     const totalPages = Math.ceil(totalWorkConfirmations / limit);
     res.status(200).json({
       totalWorkConfirmations,
