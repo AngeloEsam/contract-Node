@@ -25,7 +25,7 @@ app.use(cookieParser());
 app.use(
   cors({
     //origin: "http://localhost:5173",
-    origin: "https://shark-app-wlj67.ondigitalocean.app/",
+    origin: "https://shark-app-wlj67.ondigitalocean.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
