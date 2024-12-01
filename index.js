@@ -24,8 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    //origin: "http://localhost:5173",
-    origin: "https://shark-app-wlj67.ondigitalocean.app",
+    origin: ["https://shark-app-wlj67.ondigitalocean.app","http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],

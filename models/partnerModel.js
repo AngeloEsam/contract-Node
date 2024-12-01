@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const partnerSchema = new mongoose.Schema({
   partnerName: { type: String, required: true },
+  companyName: { type: String },
   type: {
     type: String,
     required: true,

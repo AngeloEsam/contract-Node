@@ -25,13 +25,17 @@ const createPartner = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
     const user = await User.findById(_id);
+    const companyName = user.companyName;
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const findEmail = await Partner.findOne({ email: email });
-    if (findEmail) {
-      return res.status(400).json({ message: "email already exist" });
-    }
+    const findEmailAndCompanyName = await Partner.findOne({
+      email,
+      companyName,
+    });
+    if (findEmailAndCompanyName) {
+      return res.status(400).json({ message: "email already exist" });
+    }
     let image = null;
     if (req.file) {
       image = req.file.filename;
@@ -45,6 +49,7 @@ const createPartner = async (req, res) => {
       taxNumber,
       commercialNumber,
       image,
+      companyName,
       userId: _id,
     });
     res
@@ -138,11 +143,11 @@ const updatePartner = async (req, res) => {
     }
     const updatedFields = req.body;
     Object.keys(updatedFields).forEach((key) => {
-        partner[key] = updatedFields[key];
+      partner[key] = updatedFields[key];
     });
 
     if (req.file) {
-        partner.image = req.file.filename;
+      partner.image = req.file.filename;
     }
 
     await partner.save();
@@ -162,8 +167,10 @@ const updatePartner = async (req, res) => {
 const getConsultantPartners = async (req, res) => {
   try {
     const { _id } = req.user;
-    const consultants = await Partner.find({ userId: _id, type: "Consultant" })
-      .select("partnerName _id");
+    const consultants = await Partner.find({
+      userId: _id,
+      type: "Consultant",
+    }).select("partnerName _id");
 
     if (!consultants.length) {
       return res
@@ -189,5 +196,5 @@ module.exports = {
   getAllPartner,
   deletePartner,
   updatePartner,
-  getConsultantPartners
+  getConsultantPartners,
 };
