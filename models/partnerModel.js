@@ -11,7 +11,6 @@ const partnerSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   email: {
     type: String,
-    unique: true,
     required: true,
     validate: [validator.isEmail, "Invalid email"],
   },
