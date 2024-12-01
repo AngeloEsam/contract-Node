@@ -11,6 +11,7 @@ const WorkItemSchema = new mongoose.Schema({
   dueAmount: { type: Number, default: 0 },
   previousNetAmount: { type: Number, default: 0 },
   previousDueAmount: { type: Number, default: 0 },
+  firstAction: { type: Boolean, default: false },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
 });
 

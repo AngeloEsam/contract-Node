@@ -215,6 +215,7 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
     const {
       previousQuantity,
       currentQuantity,
+      totalOfQuantityAndPrevious,
       netAmount,
       dueAmount,
       previousNetAmount,
@@ -227,8 +228,10 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
       {
-        previousQuantity,
+        previousQuantity:
+          existingWorkItem.firstAction == false ? 0 : previousQuantity,
         currentQuantity,
+        totalOfQuantityAndPrevious,
         netAmount,
         dueAmount,
         previousNetAmount,
@@ -238,7 +241,10 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
         new: true,
       }
     );
-
+    if (!existingWorkItem.firstAction) {
+      existingWorkItem.firstAction = true;
+      await existingWorkItem.save();
+    }
     const workConfirmationUpdated =
       await workConfirmationModel.findByIdAndUpdate(
         workConfirmationId,
