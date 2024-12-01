@@ -227,7 +227,7 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
       {
-        previousQuantity: existingWorkItem.previousQuantity + currentQuantity,
+        previousQuantity: totalOfQuantityAndPrevious,
         currentQuantity,
         totalOfQuantityAndPrevious,
         netAmount,
