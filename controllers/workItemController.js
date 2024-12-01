@@ -213,8 +213,8 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
   try {
     const { id, workConfirmationId } = req.params;
     const {
+      previousQuantity,
       currentQuantity,
-      totalOfQuantityAndPrevious,
       netAmount,
       dueAmount,
       previousNetAmount,
@@ -229,7 +229,6 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       {
         previousQuantity,
         currentQuantity,
-        totalOfQuantityAndPrevious,
         netAmount,
         dueAmount,
         previousNetAmount,
