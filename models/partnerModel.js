@@ -21,6 +21,7 @@ const partnerSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   contracts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contract" }],
 });
+partnerSchema.index({ email: 1, companyName: 1 }, { unique: true });
 
 const Partner = mongoose.model("Partner", partnerSchema);
 
