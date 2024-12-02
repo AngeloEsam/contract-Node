@@ -225,9 +225,11 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       return res.status(404).json({ message: "Work Item not found!" });
     }
     const updatedTotalOfQuantityAndPrevious =
-      Number(newCurrent) + Number(existingWorkItem.totalOfQuantityAndPrevious);
-    if (Number(updatedTotalOfQuantityAndPrevious) > existingWorkItem.assignedQuantity) {
-      console.log('fffffff')
+      newCurrent + existingWorkItem.totalOfQuantityAndPrevious;
+    if (
+      updatedTotalOfQuantityAndPrevious >
+      existingWorkItem.workDetails.assignedQuantity
+    ) {
       return res.status(400).json({
         message: "The total of quantity exceeds the Contract Quantity.",
       });
