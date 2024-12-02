@@ -25,7 +25,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "https://seal-app-c3vs5.ondigitalocean.app",
+      "https://whale-app-bpeim.ondigitalocean.app",
       "http://localhost:5173",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
