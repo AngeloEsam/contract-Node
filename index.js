@@ -24,7 +24,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["https://shark-app-wlj67.ondigitalocean.app","http://localhost:5173"],
+    origin: [
+      "https://seal-app-c3vs5.ondigitalocean.app",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -42,8 +45,8 @@ app.use("/api/deduction", deductionRoutes);
 app.use("/api/addition", additionRoutes);
 app.use("/api/additionWorkConfirmation", additionWorkConfirmationRoutes);
 app.use("/api/deductionWorkConfirmation", deductionWorkConfirmationRoutes);
-app.use('/api/workConfirmation', workConfirmationRoutes);
-app.use('/api/templates', templateRoutes);
+app.use("/api/workConfirmation", workConfirmationRoutes);
+app.use("/api/templates", templateRoutes);
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
