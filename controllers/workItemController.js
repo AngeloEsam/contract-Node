@@ -229,7 +229,9 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
       id,
       {
         previousQuantity:
-          existingWorkItem.firstAction == false ? 0 : previousQuantity,
+          existingWorkItem.firstAction == false
+            ? 0
+            : existingWorkItem.totalOfQuantityAndPrevious,
         currentQuantity,
         totalOfQuantityAndPrevious,
         netAmount,
