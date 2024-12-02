@@ -80,7 +80,45 @@ const getAdditionsWorkConfirmation = async (req, res) => {
     });
   }
 };
+const deleteAdditionWorkConfirmation = async (req, res) => {
+  const { additionId } = req.params;
+  const { _id: userId } = req.user;
+
+  try {
+    const addition = await AdditionWorkConfirmation.findById(additionId);
+    if (!addition) {
+      return res.status(404).json({ message: "Addition not found" });
+    }
+    if (addition.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "You are not authorized to delete this addition" });
+    }
+    const { workConfirmationId, amount } = addition;
+    await AdditionWorkConfirmation.findByIdAndDelete(additionId);
+    const workConfirmationUpdated = await workConfirmationModel.findByIdAndUpdate(
+      workConfirmationId,
+      {
+        $inc: { 
+          totalNetAmount: -amount, 
+          totalAddition: -amount,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Addition deleted and work confirmation updated successfully!",
+      updatedWorkConfirmation: workConfirmationUpdated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting addition",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addAdditionWorkConfirmation,
   getAdditionsWorkConfirmation,
+  deleteAdditionWorkConfirmation
 };

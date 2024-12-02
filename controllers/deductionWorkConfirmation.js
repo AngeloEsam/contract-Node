@@ -80,7 +80,48 @@ const getdeductionsWorkConfirmation = async (req, res) => {
     });
   }
 };
+const deleteDeductionWorkConfirmation = async (req, res) => {
+  const { deductionId } = req.params;
+  const { _id: userId } = req.user;
+
+  try {
+  
+    const deduction = await DeductionWorkConfirmation.findById(deductionId);
+    if (!deduction) {
+      return res.status(404).json({ message: "Deduction not found" });
+    }
+    if (deduction.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "You are not authorized to delete this deduction" });
+    }
+
+    const { workConfirmationId, amount } = deduction;
+
+    await DeductionWorkConfirmation.findByIdAndDelete(deductionId);
+    const workConfirmationUpdated = await workConfirmationModel.findByIdAndUpdate(
+      workConfirmationId,
+      {
+        $inc: { 
+          totalNetAmount: amount, 
+          totalDeduction: -amount,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Deduction deleted and work confirmation updated successfully!",
+      updatedWorkConfirmation: workConfirmationUpdated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting deduction",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   deductionWorkConfirmation,
   getdeductionsWorkConfirmation,
+  deleteDeductionWorkConfirmation
 };
