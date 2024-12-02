@@ -224,6 +224,13 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
     if (!existingWorkItem) {
       return res.status(404).json({ message: "Work Item not found!" });
     }
+    const updatedTotalOfQuantityAndPrevious =
+      newCurrent + existingWorkItem.totalOfQuantityAndPrevious;
+    if (updatedTotalOfQuantityAndPrevious > existingWorkItem.assignedQuantity) {
+      return res.status(400).json({
+        message: "The total of quantity exceeds the Contract Quantity.",
+      });
+    }
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
       {
@@ -232,7 +239,7 @@ const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
             ? 0
             : existingWorkItem.totalOfQuantityAndPrevious,
         currentQuantity,
-        totalOfQuantityAndPrevious:newCurrent+existingWorkItem.totalOfQuantityAndPrevious,
+        totalOfQuantityAndPrevious: updatedTotalOfQuantityAndPrevious,
         netAmount,
         dueAmount,
         previousNetAmount,
