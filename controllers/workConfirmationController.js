@@ -197,7 +197,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
       existingWorkItem.workDetails.assignedQuantity
     ) {
       return res.status(400).json({
-        message: "The total quantity exceeds the assigned contract quantity.",
+        message: `The total quantity (${updatedTotalOfQuantityAndPrevious}) exceeds the assigned contract quantity (${existingWorkItem.workDetails.assignedQuantity}).`,
       });
     }
 
@@ -206,7 +206,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     const updatedWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
       workConfirmationId,
       {
-        previousQuantity: updatedTotalOfQuantityAndPrevious, 
+        previousQuantity: updatedTotalOfQuantityAndPrevious,
         currentQuantity,
         totalOfQuantityAndPrevious: updatedTotalOfQuantityAndPrevious,
         totalAmount,
