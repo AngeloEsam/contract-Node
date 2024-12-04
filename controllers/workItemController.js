@@ -209,78 +209,7 @@ const updateWorkItem = async (req, res) => {
   }
 };
 
-const updateWorkItemBaseOnWorkConfirmation = async (req, res) => {
-  try {
-    const { id, workConfirmationId } = req.params;
-    const {
-      currentQuantity,
-      totalAmount,
-      newCurrent,
-      netAmount,
-      dueAmount,
-      previousNetAmount,
-      previousDueAmount,
-    } = req.body;
-    const existingWorkItem = await WorkItem.findById(id);
-    if (!existingWorkItem) {
-      return res.status(404).json({ message: "Work Item not found!" });
-    }
-    const updatedTotalOfQuantityAndPrevious =
-      newCurrent + existingWorkItem.totalOfQuantityAndPrevious;
-    if (
-      updatedTotalOfQuantityAndPrevious >
-      existingWorkItem.workDetails.assignedQuantity
-    ) {
-      return res.status(400).json({
-        message: "The total of quantity exceeds the Contract Quantity.",
-      });
-    }
-    const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
-      id,
-      {
-        previousQuantity:
-          existingWorkItem.firstAction == false
-            ? 0
-            : existingWorkItem.totalOfQuantityAndPrevious,
-        currentQuantity,
-        totalOfQuantityAndPrevious: updatedTotalOfQuantityAndPrevious,
-        totalAmount,
-        netAmount,
-        dueAmount,
-        previousNetAmount,
-        previousDueAmount,
-      },
-      {
-        new: true,
-      }
-    );
-    if (!existingWorkItem.firstAction) {
-      existingWorkItem.firstAction = true;
-      await existingWorkItem.save();
-    }
-    const workConfirmationUpdated =
-      await workConfirmationModel.findByIdAndUpdate(
-        workConfirmationId,
-        {
-          $inc: {
-            totalNetAmount: netAmount,
-            totalDueAmount: dueAmount,
-          },
-        },
-        { new: true }
-      );
 
-    res.status(200).json({
-      message: "Work Item updated successfully!",
-      data: updateWorkDetailsItem,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error updating Work Item",
-      error: error.message,
-    });
-  }
-};
 
 const deleteWork = async (req, res) => {
   try {
@@ -939,7 +868,6 @@ module.exports = {
   insertSheet,
   addSingleBoq,
   getWorkItemsForContract,
-  updateWorkItemBaseOnWorkConfirmation,
 };
 
 // const deleteBoq = async (req, res) => {

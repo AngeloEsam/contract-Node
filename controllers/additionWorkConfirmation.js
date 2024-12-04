@@ -19,7 +19,7 @@ const addAdditionWorkConfirmation = async (req, res) => {
 
     let finalAdditionAmount;
     if (type === "Percentage %") {
-      finalAdditionAmount = (work.totalNetAmount * amount) / 100;
+      finalAdditionAmount = (work.netAmount * amount) / 100;
     } else {
       finalAdditionAmount = amount;
     }
@@ -37,7 +37,7 @@ const addAdditionWorkConfirmation = async (req, res) => {
         workConfirmationId,
         {
           $inc: {
-            totalNetAmount: finalAdditionAmount, 
+            netAmount: finalAdditionAmount, 
             totalAddition: finalAdditionAmount, 
           },
         },
@@ -98,7 +98,7 @@ const deleteAdditionWorkConfirmation = async (req, res) => {
       workConfirmationId,
       {
         $inc: { 
-          totalNetAmount: -amount, 
+          netAmount: -amount, 
           totalAddition: -amount,
         },
       },

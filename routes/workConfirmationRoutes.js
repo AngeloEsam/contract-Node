@@ -6,6 +6,7 @@ const {
   getSingleWorkConfirmation,
   deleteWorkConfirmation,
   updateWorkConfirmation,
+  updateWorkConfirmationBaseOnWorkItem,
 } = require("../controllers/workConfirmationController");
 const { auth } = require("../middlewares/auth");
 
@@ -14,4 +15,9 @@ router.get("/", auth, getAllWorkConfirmation);
 router.get("/:id", auth, getSingleWorkConfirmation);
 router.delete("/:id", auth, deleteWorkConfirmation);
 router.put("/:id", auth, updateWorkConfirmation);
+router.put(
+  "/workConfirmation/:workConfirmationId/:id",
+  auth,
+  updateWorkConfirmationBaseOnWorkItem
+);
 module.exports = router;
