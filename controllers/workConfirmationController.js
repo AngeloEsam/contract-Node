@@ -74,7 +74,7 @@ const getSingleWorkConfirmation = async (req, res) => {
     const workConfirmation = await WorkConfirmation.findOne({
       _id: id,
       userId,
-    });
+    }).populate('contractId');
     if (!workConfirmation) {
       return res
         .status(404)
