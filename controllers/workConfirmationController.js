@@ -1,5 +1,28 @@
+const Contract = require("../models/contractModel");
 const WorkConfirmation = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
+
+const getWorkItemsForSpecificContract = async (contractId) => {
+  const contract = await Contract.findById(contractId).populate({
+    path: "mainId",
+    populate: {
+      path: "subItems",
+    },
+  });
+  if (!contract) {
+    return [];
+  }
+  let workItemss = [];
+  contract.mainId.map((item) => {
+    item.subItems.map((sub) => {
+      sub.workItems.map(async (workId) => {
+        workItemss.push({ workItemId: workId });
+      });
+    });
+  });
+  // const workItemsss = await workItemModel.find({ _id: { $in: workItemss } });
+  return workItemss;
+};
 
 const createWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
@@ -21,6 +44,9 @@ const createWorkConfirmation = async (req, res) => {
     const lastWorkConfirmation = await WorkConfirmation.findOne({
       contractId,
     }).countDocuments();
+    const workItemsForContract = await getWorkItemsForSpecificContract(
+      contractId
+    );
     const newNumber = lastWorkConfirmation + 1;
     let newWorkConfirmation = {
       contractId,
@@ -37,6 +63,7 @@ const createWorkConfirmation = async (req, res) => {
       projectName,
       partner,
       typeOfProgress,
+      workItems: workItemsForContract,
     };
 
     const workConfirmation = new WorkConfirmation(newWorkConfirmation);
@@ -86,18 +113,61 @@ const getAllWorkConfirmation = async (req, res) => {
 const getSingleWorkConfirmation = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
+
   try {
     const workConfirmation = await WorkConfirmation.findOne({
       _id: id,
       userId,
-    }).populate("contractId");
+    })
+      .populate({
+        path: "contractId",
+        select: "code",
+      })
+      .populate({
+        path: "workItems",
+        populate: {
+          path: "workItemId",
+          select: "workDetails workItemName _id",
+        },
+      });
+
     if (!workConfirmation) {
       return res
         .status(404)
         .json({ message: "Work confirmation not found or access denied" });
     }
+    const modifiedWorkItems = workConfirmation.workItems
+      .map((item) => {
+        const { workItemId } = item;
 
-    res.status(200).json({ data: workConfirmation });
+        if (!workItemId || !workItemId.workDetails) {
+          return null;
+        }
+        const { workDetails } = workItemId;
+        const {
+          remainingQuantity,
+          previousQuantity,
+          financialCategory,
+          total,
+          ...filteredWorkDetails
+        } = workDetails;
+
+        return {
+          ...item.toObject(),
+          workItemId: {
+            ...workItemId.toObject(),
+            workDetails: filteredWorkDetails,
+          },
+        };
+      })
+      .filter(Boolean);
+
+    res.status(200).json({
+      data: {
+        ...workConfirmation.toObject(),
+        workItems: modifiedWorkItems,
+      },
+    });
   } catch (error) {
     res
       .status(500)
