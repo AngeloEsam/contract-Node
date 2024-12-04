@@ -27,12 +27,10 @@ const workConfirmationSchema = new mongoose.Schema(
     newCurrent: { type: Number, default: 0 },
     totalOfQuantityAndPrevious: { type: Number, default: 0 },
     totalAmount: { type: Number, default: 0 },
-    //net amount= totalOfQuantityAndPrevious * price *completion * invoicing
     netAmount: { type: Number, default: 0 },
     dueAmount: { type: Number, default: 0 },
     previousNetAmount: { type: Number, default: 0 },
     previousDueAmount: { type: Number, default: 0 },
-    firstAction: { type: Boolean, default: false },
     totalDeduction: { type: Number, default: 0 },
     totalAddition: { type: Number, default: 0 },
   },

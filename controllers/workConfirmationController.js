@@ -1,4 +1,5 @@
 const WorkConfirmation = require("../models/workConfirmationModel");
+const workItemModel = require("../models/workItemModel");
 
 const createWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
@@ -47,12 +48,14 @@ const getAllWorkConfirmation = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   try {
-    const workConfirmations = await WorkConfirmation.find({ userId})
+    const workConfirmations = await WorkConfirmation.find({ userId })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
       .exec();
-    const totalWorkConfirmations = await WorkConfirmation.countDocuments({userId});
+    const totalWorkConfirmations = await WorkConfirmation.countDocuments({
+      userId,
+    });
     const totalPages = Math.ceil(totalWorkConfirmations / limit);
     res.status(200).json({
       totalWorkConfirmations,
@@ -74,7 +77,7 @@ const getSingleWorkConfirmation = async (req, res) => {
     const workConfirmation = await WorkConfirmation.findOne({
       _id: id,
       userId,
-    }).populate('contractId');
+    }).populate("contractId");
     if (!workConfirmation) {
       return res
         .status(404)
@@ -113,7 +116,6 @@ const deleteWorkConfirmation = async (req, res) => {
       .json({ message: "Error deleting the work confirmation", error });
   }
 };
-
 
 const updateWorkConfirmation = async (req, res) => {
   try {
@@ -163,74 +165,66 @@ const updateWorkConfirmation = async (req, res) => {
     });
   }
 };
+
 const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
   try {
     const { id, workConfirmationId } = req.params;
     const {
       currentQuantity,
-      totalAmount,
-      newCurrent,
       netAmount,
       dueAmount,
-      previousNetAmount,
       previousDueAmount,
+      previousNetAmount,
     } = req.body;
-    const existingWorkItem = await WorkItem.findById(id);
+    const existingWorkItem = await workItemModel.findById(id);
     if (!existingWorkItem) {
       return res.status(404).json({ message: "Work Item not found!" });
     }
+    const existingWorkConfirmation = await WorkConfirmation.findById(
+      workConfirmationId
+    );
+    if (!existingWorkConfirmation) {
+      return res.status(404).json({ message: "Work Confirmation not found!" });
+    }
+
+    const previousQuantity = existingWorkConfirmation.previousQuantity || 0;
+
     const updatedTotalOfQuantityAndPrevious =
-      newCurrent + existingWorkItem.totalOfQuantityAndPrevious;
+      currentQuantity + previousQuantity;
+
     if (
       updatedTotalOfQuantityAndPrevious >
       existingWorkItem.workDetails.assignedQuantity
     ) {
       return res.status(400).json({
-        message: "The total of quantity exceeds the Contract Quantity.",
+        message: "The total quantity exceeds the assigned contract quantity.",
       });
     }
-    const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
-      id,
+
+    const totalAmount =
+      updatedTotalOfQuantityAndPrevious * existingWorkItem.workDetails.price;
+    const updatedWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
+      workConfirmationId,
       {
-        previousQuantity:
-          existingWorkItem.firstAction == false
-            ? 0
-            : existingWorkItem.totalOfQuantityAndPrevious,
+        previousQuantity: updatedTotalOfQuantityAndPrevious, 
         currentQuantity,
         totalOfQuantityAndPrevious: updatedTotalOfQuantityAndPrevious,
         totalAmount,
         netAmount,
         dueAmount,
-        previousNetAmount,
         previousDueAmount,
+        previousNetAmount,
       },
-      {
-        new: true,
-      }
+      { new: true }
     );
-    if (!existingWorkItem.firstAction) {
-      existingWorkItem.firstAction = true;
-      await existingWorkItem.save();
-    }
-    const workConfirmationUpdated =
-      await WorkConfirmation.findByIdAndUpdate(
-        workConfirmationId,
-        {
-          $inc: {
-            totalNetAmount: netAmount,
-            totalDueAmount: dueAmount,
-          },
-        },
-        { new: true }
-      );
 
     res.status(200).json({
-      message: "Work Item updated successfully!",
-      data: updateWorkDetailsItem,
+      message: "Work Confirmation updated successfully!",
+      data: updatedWorkConfirmation,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error updating Work Item",
+      message: "Error updating Work Confirmation",
       error: error.message,
     });
   }
