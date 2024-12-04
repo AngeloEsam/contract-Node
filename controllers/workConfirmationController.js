@@ -18,9 +18,13 @@ const createWorkConfirmation = async (req, res) => {
       partner,
       typeOfProgress,
     } = req.body;
-
+    const lastWorkConfirmation = await WorkConfirmation.findOne({
+      contractId,
+    }).countDocuments();
+    const newNumber = lastWorkConfirmation + 1;
     let newWorkConfirmation = {
       contractId,
+      numberWithSpecificContract: newNumber,
       userId,
       withContract,
       contractType,
@@ -49,10 +53,19 @@ const getAllWorkConfirmation = async (req, res) => {
   const skip = (page - 1) * limit;
   try {
     const workConfirmations = await WorkConfirmation.find({ userId })
+      .populate({
+        path: "contractId",
+        select: "code",
+      })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
       .exec();
+    const sortedWorkConfirmations = workConfirmations.sort((a, b) => {
+      const codeA = a.contractId?.code || "";
+      const codeB = b.contractId?.code || "";
+      return codeA.localeCompare(codeB);
+    });
     const totalWorkConfirmations = await WorkConfirmation.countDocuments({
       userId,
     });
@@ -61,7 +74,7 @@ const getAllWorkConfirmation = async (req, res) => {
       totalWorkConfirmations,
       totalPages,
       currentPage: page,
-      data: workConfirmations,
+      data: sortedWorkConfirmations,
     });
   } catch (error) {
     res

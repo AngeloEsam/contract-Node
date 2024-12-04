@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const workConfirmationSchema = new mongoose.Schema(
   {
     withContract: { type: Boolean, default: false },
+    numberWithSpecificContract: { type: Number, default: 1 },
     contractId: { type: mongoose.Schema.Types.ObjectId, ref: "Contract" },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     contractType: { type: String, required: true },
