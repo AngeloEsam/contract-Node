@@ -19,7 +19,7 @@ const addAdditionWorkConfirmation = async (req, res) => {
 
     let finalAdditionAmount;
     if (type === "Percentage %") {
-      finalAdditionAmount = (work.netAmount * amount) / 100;
+      finalAdditionAmount = (work.totalAmount * amount) / 100;
     } else {
       finalAdditionAmount = amount;
     }

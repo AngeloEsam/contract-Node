@@ -19,7 +19,7 @@ const deductionWorkConfirmation = async (req, res) => {
 
     let finalDeductionAmount;
     if (type === "Percentage %") {
-      finalDeductionAmount = (work.netAmount * amount) / 100;
+      finalDeductionAmount = (work.totalAmount * amount) / 100;
     } else {
       finalDeductionAmount = amount;
     }
