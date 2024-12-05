@@ -1,4 +1,5 @@
 const Contract = require("../models/contractModel");
+const workConfirmationModel = require("../models/workConfirmationModel");
 const WorkConfirmation = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
 
@@ -23,7 +24,6 @@ const getWorkItemsForSpecificContract = async (contractId) => {
   // const workItemsss = await workItemModel.find({ _id: { $in: workItemss } });
   return workItemss;
 };
-
 const createWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
   try {
@@ -41,16 +41,32 @@ const createWorkConfirmation = async (req, res) => {
       partner,
       typeOfProgress,
     } = req.body;
-    const lastWorkConfirmation = await WorkConfirmation.findOne({
+    const lastWorkConfirmationCount = await WorkConfirmation.find({
       contractId,
     }).countDocuments();
+
     const workItemsForContract = await getWorkItemsForSpecificContract(
       contractId
     );
-    const newNumber = lastWorkConfirmation + 1;
-    let newWorkConfirmation = {
+
+    if (lastWorkConfirmationCount > 0) {
+      const lastWorkConfirmation = await WorkConfirmation.findOne({
+        contractId,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+      workItemsForContract.forEach((item) => {
+        const matchingItem = lastWorkConfirmation.workItems.find(
+          (lastItem) => String(lastItem.workItemId) === String(item.workItemId)
+        );
+        if (matchingItem) {
+          item.previousQuantity = matchingItem.totalQuantity;
+        }
+      });
+    }
+    const newWorkConfirmation = new WorkConfirmation({
       contractId,
-      numberWithSpecificContract: newNumber,
+      numberWithSpecificContract: lastWorkConfirmationCount + 1,
       userId,
       withContract,
       contractType,
@@ -64,15 +80,73 @@ const createWorkConfirmation = async (req, res) => {
       partner,
       typeOfProgress,
       workItems: workItemsForContract,
-    };
+    });
 
-    const workConfirmation = new WorkConfirmation(newWorkConfirmation);
-    await workConfirmation.save();
-    res.status(201).json({ data: workConfirmation });
+    await newWorkConfirmation.save();
+    res.status(201).json({ data: newWorkConfirmation });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+// const createWorkConfirmation = async (req, res) => {
+//   const userId = req.user._id;
+//   try {
+//     const {
+//       withContract,
+//       contractId,
+//       contractType,
+//       startDate,
+//       endDate,
+//       workConfirmationType,
+//       completionPercentage,
+//       activateInvoicingByPercentage,
+//       status,
+//       projectName,
+//       partner,
+//       typeOfProgress,
+//     } = req.body;
+//     const lastWorkConfirmation = await WorkConfirmation.findOne({
+//       contractId,
+//     }).countDocuments();
+//     const workItemsForContract = await getWorkItemsForSpecificContract(
+//       contractId
+//     );
+//     const newNumber = lastWorkConfirmation + 1;
+//     let newWorkConfirmation = {
+//       contractId,
+//       numberWithSpecificContract: newNumber,
+//       userId,
+//       withContract,
+//       contractType,
+//       startDate,
+//       endDate,
+//       workConfirmationType,
+//       completionPercentage,
+//       activateInvoicingByPercentage,
+//       status,
+//       projectName,
+//       partner,
+//       typeOfProgress,
+//       workItems: workItemsForContract,
+//     };
+
+//     if (lastWorkConfirmation.length > 0) {
+//       const findLastNumber = await workConfirmationModel.findOne({
+//         contractId,
+//         numberWithSpecificContract: lastWorkConfirmation,
+//       });
+//       if (findLastNumber) {
+//         newWorkConfirmation.workItems.previousQuantity = lastWorkConfirmation + 1;
+//       }
+//     }
+//     const workConfirmation = new WorkConfirmation(newWorkConfirmation);
+//     await workConfirmation.save();
+//     res.status(201).json({ data: workConfirmation });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 const getAllWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
   const page = parseInt(req.query.page) || 1;
@@ -251,18 +325,16 @@ const updateWorkConfirmation = async (req, res) => {
 
 const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
   try {
-    const { id, workConfirmationId } = req.params;
-    const {
-      currentQuantity,
-      netAmount,
-      dueAmount,
-      previousDueAmount,
-      previousNetAmount,
-    } = req.body;
+    const { id, workConfirmationId } = req.params; // id: workItemId
+    const { currentQuantity, invoicing, completion } = req.body;
+
+    // Find the specific Work Item
     const existingWorkItem = await workItemModel.findById(id);
     if (!existingWorkItem) {
       return res.status(404).json({ message: "Work Item not found!" });
     }
+
+    // Find the current Work Confirmation document
     const existingWorkConfirmation = await WorkConfirmation.findById(
       workConfirmationId
     );
@@ -270,40 +342,81 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
       return res.status(404).json({ message: "Work Confirmation not found!" });
     }
 
-    const previousQuantity = existingWorkConfirmation.previousQuantity || 0;
+    // Locate the specific work item within the workItems array
+    const workItemIndex = existingWorkConfirmation.workItems.findIndex(
+      (item) => item.workItemId.toString() === id
+    );
 
-    const updatedTotalOfQuantityAndPrevious =
-      currentQuantity + previousQuantity;
-
-    if (
-      updatedTotalOfQuantityAndPrevious >
-      existingWorkItem.workDetails.assignedQuantity
-    ) {
-      return res.status(400).json({
-        message: `The total quantity (${updatedTotalOfQuantityAndPrevious}) exceeds the assigned contract quantity (${existingWorkItem.workDetails.assignedQuantity}).`,
+    if (workItemIndex === -1) {
+      return res.status(404).json({
+        message: "Work Item not associated with this Work Confirmation!",
       });
     }
 
+    const currentWorkItem = existingWorkConfirmation.workItems[workItemIndex];
+    // Check if already calculated
+    if (currentWorkItem.isCalculated) {
+      return res.status(400).json({
+        message: "Work Item has already been calculated before!",
+      });
+    }
+    // Calculate updated quantities
+    const updatedTotalQuantity =
+      currentWorkItem.previousQuantity + currentQuantity;
+
+    if (updatedTotalQuantity > existingWorkItem.workDetails.assignedQuantity) {
+      return res.status(400).json({
+        message: `The total quantity (${updatedTotalQuantity}) exceeds the assigned contract quantity (${existingWorkItem.workDetails.assignedQuantity}).`,
+      });
+    }
+
+    // Calculate total amount and net amount
     const totalAmount =
-      updatedTotalOfQuantityAndPrevious * existingWorkItem.workDetails.price;
-    const updatedWorkConfirmation = await WorkConfirmation.findByIdAndUpdate(
-      workConfirmationId,
-      {
-        previousQuantity: updatedTotalOfQuantityAndPrevious,
-        currentQuantity,
-        totalOfQuantityAndPrevious: updatedTotalOfQuantityAndPrevious,
-        totalAmount,
-        netAmount,
-        dueAmount,
-        previousDueAmount,
-        previousNetAmount,
-      },
-      { new: true }
-    );
+      updatedTotalQuantity * existingWorkItem.workDetails.price;
+    const calculatedNetAmount =
+      (invoicing / 100) * (completion / 100) * totalAmount;
+
+    // Fetch the previous Work Confirmation to calculate due amount
+    const previousWorkConfirmation = await WorkConfirmation.findOne({
+      contractId: existingWorkConfirmation.contractId,
+      numberWithSpecificContract:
+        existingWorkConfirmation.numberWithSpecificContract - 1,
+    });
+
+    let previousNetAmount = 0;
+
+    if (previousWorkConfirmation) {
+      const previousWorkItemIndex =
+        previousWorkConfirmation.workItems.findIndex(
+          (item) => item.workItemId.toString() === id
+        );
+
+      if (previousWorkItemIndex !== -1) {
+        previousNetAmount =
+          previousWorkConfirmation.workItems[previousWorkItemIndex].netAmount ||
+          0;
+      }
+    }
+
+    const calculatedDueAmount = calculatedNetAmount - previousNetAmount;
+
+    // Update the work item in the current Work Confirmation
+    existingWorkConfirmation.workItems[workItemIndex] = {
+      ...currentWorkItem,
+      currentQuantity,
+      totalQuantity: updatedTotalQuantity,
+      totalAmount,
+      netAmount: calculatedNetAmount,
+      dueAmount: calculatedDueAmount,
+      isCalculated: true,
+    };
+
+    // Save the updated Work Confirmation
+    await existingWorkConfirmation.save();
 
     res.status(200).json({
       message: "Work Confirmation updated successfully!",
-      data: updatedWorkConfirmation,
+      data: existingWorkConfirmation,
     });
   } catch (error) {
     res.status(500).json({
