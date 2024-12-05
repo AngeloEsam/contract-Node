@@ -32,6 +32,8 @@ const workConfirmationSchema = new mongoose.Schema(
         totalQuantity: { type: Number, default: 0 }, 
         netAmount: { type: Number, default: 0 }, 
         dueAmount: { type: Number, default: 0 }, 
+        invoicing:{type:Number},
+        completion:{type:Number},
         isCalculated: { type: Boolean, default: false },
       },
     ],
