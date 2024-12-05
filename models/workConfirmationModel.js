@@ -37,6 +37,8 @@ const workConfirmationSchema = new mongoose.Schema(
         isCalculated: { type: Boolean, default: false },
       },
     ],
+    totalAmount: { type: Number, default: 0},
+    dueAmount: { type: Number, default: 0},
     totalDeduction: { type: Number, default: 0 },
     totalAddition: { type: Number, default: 0 },
   },

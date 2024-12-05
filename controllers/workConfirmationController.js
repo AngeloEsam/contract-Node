@@ -429,7 +429,8 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     existingWorkConfirmation.workItems[workItemIndex].dueAmount =
       calculatedDueAmount;
     existingWorkConfirmation.workItems[workItemIndex].isCalculated = true;
-
+    existingWorkConfirmation.totalAmount += totalAmount;
+    existingWorkConfirmation.dueAmount += calculatedDueAmount;
     // Debugging: Log the updated work items
     console.log(
       "Updated work items:",
