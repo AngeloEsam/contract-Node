@@ -37,7 +37,7 @@ const deductionWorkConfirmation = async (req, res) => {
         workConfirmationId,
         {
           $inc: { 
-            netAmount: -finalDeductionAmount,
+            totalAmount: -finalDeductionAmount,
             totalDeduction: finalDeductionAmount,
           },
         },
@@ -101,7 +101,7 @@ const deleteDeductionWorkConfirmation = async (req, res) => {
       workConfirmationId,
       {
         $inc: { 
-          netAmount: amount, 
+          totalAmount: amount, 
           totalDeduction: -amount,
         },
       },

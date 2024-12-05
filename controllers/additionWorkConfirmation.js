@@ -37,7 +37,7 @@ const addAdditionWorkConfirmation = async (req, res) => {
         workConfirmationId,
         {
           $inc: {
-            netAmount: finalAdditionAmount, 
+            totalAmount: finalAdditionAmount, 
             totalAddition: finalAdditionAmount, 
           },
         },
@@ -98,7 +98,7 @@ const deleteAdditionWorkConfirmation = async (req, res) => {
       workConfirmationId,
       {
         $inc: { 
-          netAmount: -amount, 
+          totalAmount: -amount, 
           totalAddition: -amount,
         },
       },
