@@ -384,9 +384,12 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
       numberWithSpecificContract:
         existingWorkConfirmation.numberWithSpecificContract - 1,
     });
-
+    const nextWorkConfirmation = await WorkConfirmation.findOne({
+      contractId: existingWorkConfirmation.contractId,
+      numberWithSpecificContract:
+        existingWorkConfirmation.numberWithSpecificContract + 1,
+    });
     let previousNetAmount = 0;
-
     if (previousWorkConfirmation) {
       const previousWorkItemIndex =
         previousWorkConfirmation.workItems.findIndex(
@@ -399,15 +402,32 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
           0;
       }
     }
+    if (nextWorkConfirmation) {
+      const nextWorkItemIndex = nextWorkConfirmation.workItems.findIndex(
+        (item) => item.workItemId.toString() === id
+      );
 
+      if (nextWorkItemIndex !== -1) {
+        // Update the previousQuantity of the next Work Item
+        nextWorkConfirmation.workItems[nextWorkItemIndex].previousQuantity =
+          updatedTotalQuantity;
+
+        // Save the updated next Work Confirmation
+        await nextWorkConfirmation.save();
+      }
+    }
     const calculatedDueAmount = calculatedNetAmount - previousNetAmount;
 
     // Update the work item in the current Work Confirmation
-    existingWorkConfirmation.workItems[workItemIndex].currentQuantity = currentQuantity;
-    existingWorkConfirmation.workItems[workItemIndex].totalQuantity = updatedTotalQuantity;
+    existingWorkConfirmation.workItems[workItemIndex].currentQuantity =
+      currentQuantity;
+    existingWorkConfirmation.workItems[workItemIndex].totalQuantity =
+      updatedTotalQuantity;
     existingWorkConfirmation.workItems[workItemIndex].totalAmount = totalAmount;
-    existingWorkConfirmation.workItems[workItemIndex].netAmount = calculatedNetAmount;
-    existingWorkConfirmation.workItems[workItemIndex].dueAmount = calculatedDueAmount;
+    existingWorkConfirmation.workItems[workItemIndex].netAmount =
+      calculatedNetAmount;
+    existingWorkConfirmation.workItems[workItemIndex].dueAmount =
+      calculatedDueAmount;
     existingWorkConfirmation.workItems[workItemIndex].isCalculated = true;
 
     // Debugging: Log the updated work items
