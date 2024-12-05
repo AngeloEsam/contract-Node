@@ -354,12 +354,14 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     }
 
     const currentWorkItem = existingWorkConfirmation.workItems[workItemIndex];
+
     // Check if already calculated
     if (currentWorkItem.isCalculated) {
       return res.status(400).json({
         message: "Work Item has already been calculated before!",
       });
     }
+
     // Calculate updated quantities
     const updatedTotalQuantity =
       currentWorkItem.previousQuantity + currentQuantity;
@@ -401,15 +403,18 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     const calculatedDueAmount = calculatedNetAmount - previousNetAmount;
 
     // Update the work item in the current Work Confirmation
-    existingWorkConfirmation.workItems[workItemIndex] = {
-      ...currentWorkItem,
-      currentQuantity,
-      totalQuantity: updatedTotalQuantity,
-      totalAmount,
-      netAmount: calculatedNetAmount,
-      dueAmount: calculatedDueAmount,
-      isCalculated: true,
-    };
+    existingWorkConfirmation.workItems[workItemIndex].currentQuantity = currentQuantity;
+    existingWorkConfirmation.workItems[workItemIndex].totalQuantity = updatedTotalQuantity;
+    existingWorkConfirmation.workItems[workItemIndex].totalAmount = totalAmount;
+    existingWorkConfirmation.workItems[workItemIndex].netAmount = calculatedNetAmount;
+    existingWorkConfirmation.workItems[workItemIndex].dueAmount = calculatedDueAmount;
+    existingWorkConfirmation.workItems[workItemIndex].isCalculated = true;
+
+    // Debugging: Log the updated work items
+    console.log(
+      "Updated work items:",
+      JSON.stringify(existingWorkConfirmation.workItems, null, 2)
+    );
 
     // Save the updated Work Confirmation
     await existingWorkConfirmation.save();
