@@ -89,64 +89,6 @@ const createWorkConfirmation = async (req, res) => {
   }
 };
 
-// const createWorkConfirmation = async (req, res) => {
-//   const userId = req.user._id;
-//   try {
-//     const {
-//       withContract,
-//       contractId,
-//       contractType,
-//       startDate,
-//       endDate,
-//       workConfirmationType,
-//       completionPercentage,
-//       activateInvoicingByPercentage,
-//       status,
-//       projectName,
-//       partner,
-//       typeOfProgress,
-//     } = req.body;
-//     const lastWorkConfirmation = await WorkConfirmation.findOne({
-//       contractId,
-//     }).countDocuments();
-//     const workItemsForContract = await getWorkItemsForSpecificContract(
-//       contractId
-//     );
-//     const newNumber = lastWorkConfirmation + 1;
-//     let newWorkConfirmation = {
-//       contractId,
-//       numberWithSpecificContract: newNumber,
-//       userId,
-//       withContract,
-//       contractType,
-//       startDate,
-//       endDate,
-//       workConfirmationType,
-//       completionPercentage,
-//       activateInvoicingByPercentage,
-//       status,
-//       projectName,
-//       partner,
-//       typeOfProgress,
-//       workItems: workItemsForContract,
-//     };
-
-//     if (lastWorkConfirmation.length > 0) {
-//       const findLastNumber = await workConfirmationModel.findOne({
-//         contractId,
-//         numberWithSpecificContract: lastWorkConfirmation,
-//       });
-//       if (findLastNumber) {
-//         newWorkConfirmation.workItems.previousQuantity = lastWorkConfirmation + 1;
-//       }
-//     }
-//     const workConfirmation = new WorkConfirmation(newWorkConfirmation);
-//     await workConfirmation.save();
-//     res.status(201).json({ data: workConfirmation });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 const getAllWorkConfirmation = async (req, res) => {
   const userId = req.user._id;
   const page = parseInt(req.query.page) || 1;
@@ -184,10 +126,15 @@ const getAllWorkConfirmation = async (req, res) => {
   }
 };
 
+
 const getSingleWorkConfirmation = async (req, res) => {
   const { id } = req.params;
+  console.log(id)
   const userId = req.user._id;
-
+  console.log(userId)
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const skip = (page - 1) * limit;
   try {
     const workConfirmation = await WorkConfirmation.findOne({
       _id: id,
@@ -204,13 +151,15 @@ const getSingleWorkConfirmation = async (req, res) => {
           select: "workDetails workItemName _id",
         },
       });
-
+      console.log(workConfirmation);
     if (!workConfirmation) {
       return res
         .status(404)
         .json({ message: "Work confirmation not found or access denied" });
     }
-    const modifiedWorkItems = workConfirmation.workItems
+
+    const totalItems = workConfirmation.workItems.length;
+    const workItems = workConfirmation.workItems
       .map((item) => {
         const { workItemId } = item;
 
@@ -235,11 +184,18 @@ const getSingleWorkConfirmation = async (req, res) => {
         };
       })
       .filter(Boolean);
+    const paginatedWorkItems = workItems.slice(skip, skip + limit);
 
     res.status(200).json({
       data: {
         ...workConfirmation.toObject(),
-        workItems: modifiedWorkItems,
+        workItems: paginatedWorkItems,
+      },
+      pagination: {
+        totalItems,
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        limit,
       },
     });
   } catch (error) {
