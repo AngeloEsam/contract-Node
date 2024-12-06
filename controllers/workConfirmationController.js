@@ -129,9 +129,7 @@ const getAllWorkConfirmation = async (req, res) => {
 
 const getSingleWorkConfirmation = async (req, res) => {
   const { id } = req.params;
-  console.log(id)
   const userId = req.user._id;
-  console.log(userId)
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const skip = (page - 1) * limit;
@@ -151,7 +149,6 @@ const getSingleWorkConfirmation = async (req, res) => {
           select: "workDetails workItemName _id",
         },
       });
-      console.log(workConfirmation);
     if (!workConfirmation) {
       return res
         .status(404)
