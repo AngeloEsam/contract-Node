@@ -7,6 +7,5 @@ const {
 const { auth } = require("../middlewares/auth");
 const router = express.Router();
 router.post("/save", auth, saveTemplate);
-router.post("/",auth, addTemplate);
 router.get("/", auth, getTemplates);
 module.exports = router;

@@ -8,7 +8,6 @@ const templateSchema = new mongoose.Schema(
     tags: [{ type: String }],
     mainId: { type: mongoose.Schema.Types.ObjectId, ref: "Main" },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    relevantProject: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
   },
   { timestamps: true }
 );

@@ -87,8 +87,37 @@ const getDeductions = async (req, res) => {
     });
   }
 };
+const deleteDeduction = async (req, res) => {
+  const { deductionId } = req.params;
+  const { _id: userId } = req.user;
+  try {
+    const deduction = await Deduction.findOne({ _id: deductionId, userId });
+    if (!deduction) {
+      return res.status(404).json({ message: "Deduction not found or access denied" });
+    }
+    const contractId = deduction.contractId;
+    await Deduction.findByIdAndDelete(deductionId);
+    const contractUpdated = await Contract.findByIdAndUpdate(
+      contractId,
+      { $inc: { totalDeduction: -deduction.amount } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Deduction deleted and contract updated successfully!",
+      deletedDeduction: deduction,
+      updatedContract: contractUpdated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting deduction",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   addDeduction,
   getDeductions,
+  deleteDeduction
 };
