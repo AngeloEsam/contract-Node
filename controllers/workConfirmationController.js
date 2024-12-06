@@ -452,6 +452,43 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
   }
 };
 
+const searchByWorkItemName = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Unauthorized. Please log in to perform this action.",
+      });
+    }
+    const { workItemName } = req.query;
+    if (!workItemName) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a workItemName to search for." });
+    }
+    const results = await WorkConfirmation.find()
+      .populate({
+        path: "workItems.workItemId",
+        match: { workItemName: { $regex: workItemName, $options: "i" } },
+        select: "workItemName",
+      })
+      .exec();
+
+    const filteredWorkItems = results.flatMap((confirmation) =>
+      confirmation.workItems
+        .filter((item) => item.workItemId)
+        .map((item) => ({
+          ...item._doc,
+          workItemName: item.workItemId.workItemName,
+        }))
+    );
+
+    res.status(200).json({ data: filteredWorkItems });
+  } catch (error) {
+    console.error("Error fetching work items with names:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createWorkConfirmation,
   getAllWorkConfirmation,
@@ -459,4 +496,5 @@ module.exports = {
   deleteWorkConfirmation,
   updateWorkConfirmation,
   updateWorkConfirmationBaseOnWorkItem,
+  searchByWorkItemName,
 };
