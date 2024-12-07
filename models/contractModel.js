@@ -4,6 +4,7 @@ const contractSchema = new mongoose.Schema({
   taxValue: { type: Number, default: 0 },
   taxRate: { type: Number, default: 0 },
   code: { type: String, unique: true, required: true },
+  name: { type: String },
   downPaymentValue: { type: Number, default: 0 },
   downPaymentRate: { type: Number, default: 0 },
   downPaymentType: {

@@ -11,6 +11,7 @@ const createContract = async (req, res) => {
     const userId = req.user._id;
     const {
       code,
+      name,
       contractType,
       projectId,
       partnerId,
@@ -28,6 +29,7 @@ const createContract = async (req, res) => {
     }
     const newContract = new Contract({
       code,
+      name,
       contractType,
       project: projectId,
       partner: partnerId,
@@ -219,7 +221,8 @@ const getSingleContract = async (req, res) => {
       return res.status(400).json({ message: "Contract ID is required" });
     }
 
-    const contract = await Contract.findById(contractId).populate({
+    const contract = await Contract.findById(contractId)
+    .populate({
       path: "mainId",
       sort: { createdAt: -1 },
       populate: {
@@ -287,6 +290,7 @@ const updateContract = async (req, res) => {
 
     const updateData = {
       code: req.body.code || contract.code,
+      name: req.body.name || contract.name,
       contractType: req.body.contractType || contract.contractType,
       startDate: req.body.startDate || contract.startDate,
       endDate: req.body.endDate || contract.endDate,
@@ -481,7 +485,7 @@ const getUserContractsCode = async (req, res) => {
     if (user.parentId == null) {
       user = await User.findById(userId).populate({
         path: "contracts",
-        select: "code _id contractType partner project startDate endDate",
+        select: "code name _id contractType partner project startDate endDate",
         populate: [
           { path: "project", select: "projectName" },
           { path: "partner", select: "partnerName" },

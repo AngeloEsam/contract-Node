@@ -6,7 +6,7 @@ const templateSchema = new mongoose.Schema(
     description: { type: String },
     category: { type: String },
     tags: [{ type: String }],
-    mainId: { type: mongoose.Schema.Types.ObjectId, ref: "Main" },
+    mainId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Main" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
