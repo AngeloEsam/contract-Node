@@ -14,6 +14,7 @@ const {
   getProjectStatusSummary,
   searchProjects,
   duplicateProject,
+  getProjectContracts,
 } = require("../controllers/projectController.js");
 
 //upload image
@@ -56,6 +57,8 @@ router.get("/names", auth, getUserGroupsOfNames);
 router.get("/status", auth, getProjectStatusSummary);
 // search by project name or project manager or status
 router.get("/search", auth, searchProjects);
+// get all contracts for project
+router.get("/contracts/:projectId", auth, getProjectContracts);
 //get single project
 router.get("/:projectId",auth, getSingleProject);
 //delete project

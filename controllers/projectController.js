@@ -368,6 +368,33 @@ const duplicateProject = async (req, res) => {
   }
 };
 
+const getProjectContracts = async (req, res) => {
+  const { projectId } = req.params; 
+  try {
+    if (!req.user || !req.user._id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized, please login first!" });
+    }
+    const project = await Project.findById(projectId).populate("contracts");
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    if (project.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Access denied!" });
+    }
+    res.status(200).json({
+      message: "Contracts fetched successfully",
+      contracts: project.contracts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching contracts",
+      error: error.message,
+    });
+  }
+};
+
 
 
 module.exports = {
@@ -380,5 +407,6 @@ module.exports = {
   getUserGroupsOfNames,
   getProjectStatusSummary,
   searchProjects,
-  duplicateProject
+  duplicateProject,
+  getProjectContracts
 };

@@ -14,7 +14,8 @@ const additionWorkConfirmationRoutes = require("./routes/additionWorkConfirmatio
 const deductionWorkConfirmationRoutes = require("./routes/deductionWorkConfirmation");
 const workConfirmationRoutes = require("./routes/workConfirmationRoutes");
 const templateRoutes = require("./routes/templateRoutes");
-const estimatorRoutes = require("./routes/estimatorRoutes");
+const materialRoutes = require("./routes/materialRoutes");
+const laborRoutes = require("./routes/laborRoutes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -48,7 +49,8 @@ app.use("/api/additionWorkConfirmation", additionWorkConfirmationRoutes);
 app.use("/api/deductionWorkConfirmation", deductionWorkConfirmationRoutes);
 app.use("/api/workConfirmation", workConfirmationRoutes);
 app.use("/api/templates", templateRoutes);
-app.use("/api/estimators", estimatorRoutes);
+app.use("/api/materials", materialRoutes);
+app.use("/api/labors", laborRoutes);
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
