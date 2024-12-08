@@ -8,6 +8,7 @@ const {
   getAllEquipments,
   getSingleEquipment,
   deleteEquipment,
+  getAllEquipmentNames,
 } = require("../controllers/equipmentController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -27,6 +28,7 @@ const router = express.Router();
 
 router.post("/", auth, addEquipment);
 router.get("/", auth, getAllEquipments);
+router.get("/names", auth, getAllEquipmentNames);
 router.get("/:equipmentId", auth, getSingleEquipment);
 router.delete("/:equipmentId", auth, deleteEquipment);
 

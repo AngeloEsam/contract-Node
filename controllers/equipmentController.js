@@ -152,9 +152,25 @@ const deleteEquipment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const getAllEquipmentNames = async (req, res) => {
+  try {
+    const equipmentNames = await Equipment.find({ userId: req.user._id }, "equipmentName");
+    res.status(200).json({
+      message: "Equipment names fetched successfully",
+      data: equipmentNames,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching Equipment names",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   addEquipment,
   getAllEquipments,
   getSingleEquipment,
   deleteEquipment,
+  getAllEquipmentNames
 };

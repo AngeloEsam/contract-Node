@@ -8,6 +8,7 @@ const {
   getAllOtherCosts,
   getSingleOtherCost,
   deleteOtherCost,
+  getAllOtherCostsNames,
 } = require("../controllers/otherCostController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -27,6 +28,7 @@ const router = express.Router();
 
 router.post("/", auth, addOtherCost);
 router.get("/", auth, getAllOtherCosts);
+router.get("/names", auth, getAllOtherCostsNames);
 router.get("/:otherCostId", auth, getSingleOtherCost);
 router.delete("/:otherCostId", auth, deleteOtherCost);
 

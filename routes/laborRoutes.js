@@ -8,6 +8,7 @@ const {
   getAllLabors,
   getSingleLabor,
   deleteLabor,
+  getAllLaborNames,
 } = require("../controllers/laborController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -27,6 +28,7 @@ const router = express.Router();
 
 router.post("/", auth, addLabor);
 router.get("/", auth, getAllLabors);
+router.get("/names", auth, getAllLaborNames);
 router.get("/:laborId", auth, getSingleLabor);
 router.delete("/:laborId", auth, deleteLabor);
 

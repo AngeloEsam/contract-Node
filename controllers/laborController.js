@@ -152,9 +152,25 @@ const deleteLabor = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const getAllLaborNames = async (req, res) => {
+  try {
+    const laborNames = await Labor.find({ userId: req.user._id }, "laborName");
+    res.status(200).json({
+      message: "Labor  names fetched successfully",
+      data: laborNames,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching Labor names",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   addLabor,
   getAllLabors,
   getSingleLabor,
   deleteLabor,
+  getAllLaborNames,
 };

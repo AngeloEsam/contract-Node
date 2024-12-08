@@ -154,9 +154,26 @@ const deleteOtherCost = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const getAllOtherCostsNames = async (req, res) => {
+  try {
+    const otherCostNames = await OtherCost.find({ userId: req.user._id }, "otherCostName");
+    res.status(200).json({
+      message: "Other Costs names fetched successfully",
+      data: otherCostNames,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching Other Costs names",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   addOtherCost,
   getAllOtherCosts,
   getSingleOtherCost,
   deleteOtherCost,
+  getAllOtherCostsNames
 };
