@@ -1,13 +1,13 @@
 const Contract = require("../models/contractModel");
-const Labor = require("../models/laborModel");
-const addLabor = async (req, res) => {
+const Equipment = require("../models/equipmentModel");
+const addEquipment = async (req, res) => {
   try {
     const {
       projectName,
       contract,
       applyOn,
       boqLineItem,
-      laborName,
+      equipmentName,
       unitOfMeasure,
       quantity,
       cost,
@@ -61,44 +61,44 @@ const addLabor = async (req, res) => {
       }
     }
 
-    const newLabor = new Labor({
+    const newEquipment = new Equipment({
       projectName,
       contract,
       applyOn,
       userId,
       boqLineItem: applyOn === "BOQ Line" ? boqLineItem : null,
-      laborName,
+      equipmentName,
       unitOfMeasure,
       quantity,
       cost,
       total: quantity * cost,
     });
 
-    await newLabor.save();
-    res.status(201).json({ message: "Labor added successfully!", newLabor });
+    await newEquipment.save();
+    res.status(201).json({ message: "Equipment added successfully!", newEquipment });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const getAllLabors = async (req, res) => {
+const getAllEquipments = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
         .status(401)
         .json({ error: "Unauthorized: User not logged in." });
     }
-    const labors = await Labor.find({ userId: req.user._id })
+    const equipments = await Equipment.find({ userId: req.user._id })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName");
-    res.status(200).json({ data: labors });
+    res.status(200).json({ data: equipments });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const getSingleLabor = async (req, res) => {
+const getSingleEquipment = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
@@ -106,55 +106,55 @@ const getSingleLabor = async (req, res) => {
         .json({ error: "Unauthorized: User not logged in." });
     }
 
-    const { laborId } = req.params;
+    const { equipmentId } = req.params;
 
-    if (!laborId) {
-      return res.status(400).json({ error: "Labor ID is required." });
+    if (!equipmentId) {
+      return res.status(400).json({ error: "Equipment ID is required." });
     }
 
-    const labor = await Labor.findOne({
-      _id: laborId,
+    const equipment = await Equipment.findOne({
+      _id: equipmentId,
       userId: req.user._id,
     })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName");
-    res.status(200).json({ data: labor });
+    res.status(200).json({ data: equipment });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const deleteLabor = async (req, res) => {
+const deleteEquipment = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
         .status(401)
         .json({ error: "Unauthorized: User not logged in." });
     }
-    const { laborId } = req.params;
-    if (!laborId) {
-      return res.status(400).json({ error: "Labor ID is required." });
+    const { equipmentId } = req.params;
+    if (!equipmentId) {
+      return res.status(400).json({ error: "Equipment ID is required." });
     }
-    const labor = await Labor.findOne({
-      _id: laborId,
+    const equipment = await Equipment.findOne({
+      _id: equipmentId,
       userId: req.user._id,
     });
 
-    if (!labor) {
-      return res.status(404).json({ message: "Labor not found." });
+    if (!equipment) {
+      return res.status(404).json({ message: "Equipment not found." });
     }
-    await Labor.findByIdAndDelete(laborId);
+    await Equipment.findByIdAndDelete(equipmentId);
 
-    res.status(200).json({ message: "Labor deleted successfully." });
+    res.status(200).json({ message: "Equipment deleted successfully." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 module.exports = {
-  addLabor,
-  getAllLabors,
-  getSingleLabor,
-  deleteLabor,
+  addEquipment,
+  getAllEquipments,
+  getSingleEquipment,
+  deleteEquipment,
 };

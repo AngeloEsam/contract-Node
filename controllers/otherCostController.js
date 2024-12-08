@@ -1,13 +1,13 @@
 const Contract = require("../models/contractModel");
-const Labor = require("../models/laborModel");
-const addLabor = async (req, res) => {
+const OtherCost = require("../models/otherCostModel");
+const addOtherCost = async (req, res) => {
   try {
     const {
       projectName,
       contract,
       applyOn,
       boqLineItem,
-      laborName,
+      otherCostName,
       unitOfMeasure,
       quantity,
       cost,
@@ -61,44 +61,46 @@ const addLabor = async (req, res) => {
       }
     }
 
-    const newLabor = new Labor({
+    const newOtherCost = new OtherCost({
       projectName,
       contract,
       applyOn,
       userId,
       boqLineItem: applyOn === "BOQ Line" ? boqLineItem : null,
-      laborName,
+      otherCostName,
       unitOfMeasure,
       quantity,
       cost,
       total: quantity * cost,
     });
 
-    await newLabor.save();
-    res.status(201).json({ message: "Labor added successfully!", newLabor });
+    await newOtherCost.save();
+    res
+      .status(201)
+      .json({ message: "Other Cost added successfully!", newOtherCost });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const getAllLabors = async (req, res) => {
+const getAllOtherCosts = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
         .status(401)
         .json({ error: "Unauthorized: User not logged in." });
     }
-    const labors = await Labor.find({ userId: req.user._id })
+    const others = await OtherCost.find({ userId: req.user._id })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName");
-    res.status(200).json({ data: labors });
+    res.status(200).json({ data: others });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const getSingleLabor = async (req, res) => {
+const getSingleOtherCost = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
@@ -106,55 +108,55 @@ const getSingleLabor = async (req, res) => {
         .json({ error: "Unauthorized: User not logged in." });
     }
 
-    const { laborId } = req.params;
+    const { otherCostId } = req.params;
 
-    if (!laborId) {
-      return res.status(400).json({ error: "Labor ID is required." });
+    if (!otherCostId) {
+      return res.status(400).json({ error: "Other Cost ID is required." });
     }
 
-    const labor = await Labor.findOne({
-      _id: laborId,
+    const otherCost = await OtherCost.findOne({
+      _id: otherCostId,
       userId: req.user._id,
     })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName");
-    res.status(200).json({ data: labor });
+    res.status(200).json({ data: otherCost });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-const deleteLabor = async (req, res) => {
+const deleteOtherCost = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res
         .status(401)
         .json({ error: "Unauthorized: User not logged in." });
     }
-    const { laborId } = req.params;
-    if (!laborId) {
-      return res.status(400).json({ error: "Labor ID is required." });
+    const { otherCostId } = req.params;
+    if (!otherCostId) {
+      return res.status(400).json({ error: "Other Cost ID is required." });
     }
-    const labor = await Labor.findOne({
-      _id: laborId,
+    const otherCost = await OtherCost.findOne({
+      _id: otherCostId,
       userId: req.user._id,
     });
 
-    if (!labor) {
-      return res.status(404).json({ message: "Labor not found." });
+    if (!otherCost) {
+      return res.status(404).json({ message: "Other Cost not found." });
     }
-    await Labor.findByIdAndDelete(laborId);
+    await OtherCost.findByIdAndDelete(otherCostId);
 
-    res.status(200).json({ message: "Labor deleted successfully." });
+    res.status(200).json({ message: "Other Cost deleted successfully." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 module.exports = {
-  addLabor,
-  getAllLabors,
-  getSingleLabor,
-  deleteLabor,
+  addOtherCost,
+  getAllOtherCosts,
+  getSingleOtherCost,
+  deleteOtherCost,
 };
