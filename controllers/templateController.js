@@ -226,6 +226,25 @@ const getTemplateNames = async (req, res) => {
     });
   }
 };
+const getTemplateCategories = async (req, res) => {
+  try {
+    const templates = await Template.find({ createdBy: req.user._id }, "category");
+    if (templates.length > 0) {
+      res.status(200).json({
+        message: "Template names fetched successfully",
+        data: templates,
+      });
+    } else {
+      res.status(404).json({ message: "No templates found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching template names",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   saveTemplate,
@@ -236,4 +255,5 @@ module.exports = {
   updateTemplate,
   searchTemplates,
   getTemplateNames,
+  getTemplateCategories
 };
