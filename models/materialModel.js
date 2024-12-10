@@ -22,6 +22,18 @@ const materialCostSchema = new mongoose.Schema({
   quantity: { type: Number, default: 0 },
   cost: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
+  includeTax:{ type: Boolean, default: false},
+  showSales:{ type: Boolean, default: false},
+  taxValue:{ type: Number, default: 0},
+  profitMargin:{ type: Number, default: 0},
+  totalMaterialCost:{type:Number,default: 0},
+  taxDeductedValue:{type:Number,default: 0},
+  profitValue:{type:Number,default: 0},
+  totalLaborCost:{type:Number,default: 0},
+  totalEquipmentCost:{type:Number,default: 0},
+  totalOtherCost:{type:Number,default: 0},
+  overallTotal :{type:Number,default: 0},
+  riskFactor: { type: Number, default: 0 },
 });
 
 module.exports = mongoose.model("Material", materialCostSchema);

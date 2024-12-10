@@ -12,6 +12,7 @@ const addMaterial = async (req, res) => {
       quantity,
       cost,
     } = req.body;
+
     if (!req.user || !req.user._id) {
       return res
         .status(401)
@@ -61,6 +62,7 @@ const addMaterial = async (req, res) => {
       }
     }
 
+    const total = quantity * cost;
     const newMaterial = new Material({
       projectName,
       contract,
@@ -71,18 +73,20 @@ const addMaterial = async (req, res) => {
       unitOfMeasure,
       quantity,
       cost,
-      total: quantity * cost,
+      total,
+      totalMaterialCost:total
     });
-
-    await newMaterial.save();
-    res
-      .status(201)
-      .json({ message: "Material added successfully!", newMaterial });
+    await newMaterial.save();  
+    res.status(201).json({
+      message: "Material added successfully!",
+      newMaterial,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error." });
   }
 };
+
 const getAllMaterials = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
@@ -154,9 +158,59 @@ const deleteMaterial = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const calculateSalesAndTax = async function (req, res) {
+  try {
+    const { showSales, includeTax, taxValue, profitMargin } = req.body;
+
+    if (typeof showSales !== "boolean" || typeof includeTax !== "boolean") {
+      return res.status(400).json({ message: "Invalid or missing showSales/includeTax" });
+    }
+    if (showSales && (isNaN(profitMargin) || profitMargin < 0)) {
+      return res.status(400).json({ message: "Invalid or missing profitMargin" });
+    }
+    if (includeTax && (isNaN(taxValue) || taxValue < 0)) {
+      return res.status(400).json({ message: "Invalid or missing taxValue" });
+    }
+    const materials = await Material.find();
+
+    // تعديل البيانات بناءً على المعطيات
+    const updatedMaterials = materials.map(async (material) => {
+      const updatedMaterial = { ...material._doc };
+
+      if (showSales && profitMargin > 0) {
+        const profitValue = material.total + (material.total * profitMargin) / 100;
+        updatedMaterial.profitValue = profitValue;
+      }
+      if (includeTax && taxValue > 0) {
+        const taxDeductedValue = material.total - (material.total * taxValue) / 100;
+        updatedMaterial.taxDeductedValue = taxDeductedValue;
+      }
+      await Material.updateOne(
+        { _id: material._id },
+        {
+          $set: {
+            profitValue: updatedMaterial.profitValue || 0, 
+            taxDeductedValue: updatedMaterial.taxDeductedValue || 0,
+          },
+        }
+      );
+      return updatedMaterial;
+    });
+    const results = await Promise.all(updatedMaterials);
+
+    return res.status(200).json({
+      message: "Calculation applied and data updated successfully.",
+      result: results,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 module.exports = {
   addMaterial,
   getAllMaterials,
   getSingleMaterial,
   deleteMaterial,
+  calculateSalesAndTax
 };
