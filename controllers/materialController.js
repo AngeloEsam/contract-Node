@@ -3,9 +3,11 @@ const Material = require("../models/materialModel");
 const addMaterial = async (req, res) => {
   try {
     const {
+      estimatorId,
       projectName,
       contract,
       applyOn,
+      category,
       boqLineItem,
       materialName,
       unitOfMeasure,
@@ -61,12 +63,13 @@ const addMaterial = async (req, res) => {
         });
       }
     }
-
     const total = quantity * cost;
     const newMaterial = new Material({
+      estimatorId,
       projectName,
       contract,
       applyOn,
+      category,
       userId,
       boqLineItem: applyOn === "BOQ Line" ? boqLineItem : null,
       materialName,
@@ -74,11 +77,11 @@ const addMaterial = async (req, res) => {
       quantity,
       cost,
       total,
-      totalMaterialCost:total
     });
-    await newMaterial.save();  
+
+    await newMaterial.save();
     res.status(201).json({
-      message: "Material added successfully!",
+      message: "added successfully!",
       newMaterial,
     });
   } catch (error) {
@@ -86,7 +89,6 @@ const addMaterial = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
-
 const getAllMaterials = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
@@ -158,15 +160,19 @@ const deleteMaterial = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-const calculateSalesAndTax = async function (req, res) {
+const calculateSalesAndTax = async (req, res) => {
   try {
     const { showSales, includeTax, taxValue, profitMargin } = req.body;
 
     if (typeof showSales !== "boolean" || typeof includeTax !== "boolean") {
-      return res.status(400).json({ message: "Invalid or missing showSales/includeTax" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing showSales/includeTax" });
     }
     if (showSales && (isNaN(profitMargin) || profitMargin < 0)) {
-      return res.status(400).json({ message: "Invalid or missing profitMargin" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing profitMargin" });
     }
     if (includeTax && (isNaN(taxValue) || taxValue < 0)) {
       return res.status(400).json({ message: "Invalid or missing taxValue" });
@@ -178,18 +184,20 @@ const calculateSalesAndTax = async function (req, res) {
       const updatedMaterial = { ...material._doc };
 
       if (showSales && profitMargin > 0) {
-        const profitValue = material.total + (material.total * profitMargin) / 100;
+        const profitValue =
+          material.total + (material.total * profitMargin) / 100;
         updatedMaterial.profitValue = profitValue;
       }
       if (includeTax && taxValue > 0) {
-        const taxDeductedValue = material.total - (material.total * taxValue) / 100;
+        const taxDeductedValue =
+          material.total - (material.total * taxValue) / 100;
         updatedMaterial.taxDeductedValue = taxDeductedValue;
       }
       await Material.updateOne(
         { _id: material._id },
         {
           $set: {
-            profitValue: updatedMaterial.profitValue || 0, 
+            profitValue: updatedMaterial.profitValue || 0,
             taxDeductedValue: updatedMaterial.taxDeductedValue || 0,
           },
         }
@@ -207,10 +215,32 @@ const calculateSalesAndTax = async function (req, res) {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+const getAllByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const validCategories = ["Material", "Labor", "Equipment", "OtherCost"];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ message: "Invalid category provided." });
+    }
+    const materials = await Material.find({ category, userId: req.user._id })
+      .populate("projectName", "projectName")
+      .populate("contract", "code name")
+      .populate("boqLineItem", "workItemName")
+      .populate("estimatorId", "name");
+
+    res.status(200).json({ data: materials });
+  } catch (error) {
+    console.error("Error fetching materials by category:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch materials by category.", error });
+  }
+};
 module.exports = {
   addMaterial,
   getAllMaterials,
   getSingleMaterial,
   deleteMaterial,
-  calculateSalesAndTax
+  calculateSalesAndTax,
+  getAllByCategory,
 };

@@ -14,6 +14,8 @@ const additionWorkConfirmationRoutes = require("./routes/additionWorkConfirmatio
 const deductionWorkConfirmationRoutes = require("./routes/deductionWorkConfirmation");
 const workConfirmationRoutes = require("./routes/workConfirmationRoutes");
 const templateRoutes = require("./routes/templateRoutes");
+const estimatorTemplateRoutes = require("./routes/estimatorTemplateRoutes");
+const estimatorRoutes = require("./routes/estimatorRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const laborRoutes = require("./routes/laborRoutes");
 const equipmentRoutes = require("./routes/equipmentRoutes");
@@ -51,6 +53,8 @@ app.use("/api/additionWorkConfirmation", additionWorkConfirmationRoutes);
 app.use("/api/deductionWorkConfirmation", deductionWorkConfirmationRoutes);
 app.use("/api/workConfirmation", workConfirmationRoutes);
 app.use("/api/templates", templateRoutes);
+app.use("/api/estimatorTemplates", estimatorTemplateRoutes);
+app.use("/api/estimators", estimatorRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/labors", laborRoutes);
 app.use("/api/equipments", equipmentRoutes);
