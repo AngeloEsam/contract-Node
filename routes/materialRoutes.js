@@ -28,10 +28,10 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post("/", auth, addMaterial);
-router.post("/calculate", auth, calculateSalesAndTax);
 router.get("/", auth, getAllMaterials);
 router.get("/:category",auth, getAllByCategory);
-router.get("/:materialId", auth, getSingleMaterial);
+router.get("/single/:materialId", auth, getSingleMaterial);
 router.delete("/:materialId", auth, deleteMaterial);
+router.put("/calculate", auth, calculateSalesAndTax);
 
 module.exports = router;

@@ -160,9 +160,11 @@ const deleteMaterial = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 const calculateSalesAndTax = async (req, res) => {
   try {
-    const { showSales, includeTax, taxValue, profitMargin } = req.body;
+    const { showSales, includeTax, taxValue, profitMargin, category } =
+      req.body;
 
     if (typeof showSales !== "boolean" || typeof includeTax !== "boolean") {
       return res
@@ -177,7 +179,7 @@ const calculateSalesAndTax = async (req, res) => {
     if (includeTax && (isNaN(taxValue) || taxValue < 0)) {
       return res.status(400).json({ message: "Invalid or missing taxValue" });
     }
-    const materials = await Material.find();
+    const materials = await Material.find({ category: category });
 
     // تعديل البيانات بناءً على المعطيات
     const updatedMaterials = materials.map(async (material) => {
@@ -193,22 +195,26 @@ const calculateSalesAndTax = async (req, res) => {
           material.total - (material.total * taxValue) / 100;
         updatedMaterial.taxDeductedValue = taxDeductedValue;
       }
+
       await Material.updateOne(
         { _id: material._id },
         {
           $set: {
-            profitValue: updatedMaterial.profitValue || 0,
-            taxDeductedValue: updatedMaterial.taxDeductedValue || 0,
+            profitMargin: profitMargin || material.profitMargin,
+            taxValue: taxValue || material.taxValue,
+            profitValue: updatedMaterial.profitValue || material.profitValue,
+            taxDeductedValue:
+              updatedMaterial.taxDeductedValue || material.taxDeductedValue,
           },
-        }
+        },
+        { new: true }
       );
       return updatedMaterial;
     });
     const results = await Promise.all(updatedMaterials);
-
     return res.status(200).json({
       message: "Calculation applied and data updated successfully.",
-      result: results,
+      data: results,
     });
   } catch (error) {
     console.error(error);
