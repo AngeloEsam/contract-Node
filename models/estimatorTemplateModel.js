@@ -24,6 +24,8 @@ const estimatorTemplateSchema = new mongoose.Schema({
     },
   ], 
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
+},{
+  timestamps: true,
 });
 
 module.exports = mongoose.model("EstimatorTemplate", estimatorTemplateSchema);

@@ -35,6 +35,8 @@ const materialCostSchema = new mongoose.Schema({
   profitMargin: { type: Number, default: 0 },
   taxDeductedValue: { type: Number, default: 0 },
   profitValue: { type: Number, default: 0 },
+},{
+  timestamps: true,
 });
 
 module.exports = mongoose.model("Material", materialCostSchema);

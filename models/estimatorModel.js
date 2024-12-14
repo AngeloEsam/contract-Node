@@ -16,6 +16,8 @@ const EstimatorSchema = new mongoose.Schema({
   totalOtherCost: { type: Number, default: 0 },
   overallTotal: { type: Number, default: 0 },
   riskFactor: { type: Number, default: 0 },
+},{
+  timestamps: true,
 });
 
 module.exports = mongoose.model("Estimator", EstimatorSchema);
