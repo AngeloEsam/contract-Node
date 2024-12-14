@@ -2,12 +2,10 @@ const mongoose = require("mongoose");
 const materialCostSchema = new mongoose.Schema({
   projectName: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true,
     ref: "Project",
   },
   contract: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true,
     ref: "Contract",
   },
   estimatorId: {

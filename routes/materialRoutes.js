@@ -10,6 +10,7 @@ const {
   deleteMaterial,
   calculateSalesAndTax,
   getAllByCategory,
+  insertMaterial,
 } = require("../controllers/materialController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -28,8 +29,9 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post("/", auth, addMaterial);
+router.post("/:estimatorId", auth, upload.single("file"), insertMaterial);
 router.get("/", auth, getAllMaterials);
-router.get("/:category",auth, getAllByCategory);
+router.get("/:category", auth, getAllByCategory);
 router.get("/single/:materialId", auth, getSingleMaterial);
 router.delete("/:materialId", auth, deleteMaterial);
 router.put("/calculate", auth, calculateSalesAndTax);
