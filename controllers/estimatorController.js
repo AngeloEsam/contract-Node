@@ -85,5 +85,56 @@ const getTotalFromMaterial = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getSingleEstimator = async (req, res) => {
+  try {
+    const { estimatorId } = req.params;
+    const userId = req.user._id;
+    const estimator = await estimatorModel.findById(estimatorId);
+    if (!estimator) {
+      return res.status(404).json({ message: "Estimator not found" });
+    }
+    if (estimator.userId.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to view this estimator" });
+    }
+    res.status(200).json({ data: estimator });
+  } catch (error) {
+    console.error("Error fetching estimator:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching the estimator" });
+  }
+};
 
-module.exports = { createEstimator, getAllEstimator, getTotalFromMaterial };
+const deleteEstimator = async (req, res) => {
+  try {
+    const { estimatorId } = req.params;
+    const userId = req.user._id;
+    const estimator = await estimatorModel.findById(estimatorId);
+
+    if (!estimator) {
+      return res.status(404).json({ message: "Estimator not found" });
+    }
+    if (estimator.userId.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this estimator" });
+    }
+    await estimatorModel.findByIdAndDelete(estimatorId);
+
+    res.status(200).json({ message: "Estimator deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting estimator:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while deleting the estimator" });
+  }
+};
+module.exports = {
+  createEstimator,
+  getAllEstimator,
+  getTotalFromMaterial,
+  deleteEstimator,
+  getSingleEstimator
+};

@@ -3,7 +3,7 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const { auth } = require("../middlewares/auth");
-const { createEstimator, getAllEstimator, getTotalFromMaterial } = require("../controllers/estimatorController");
+const { createEstimator, getAllEstimator, getTotalFromMaterial, deleteEstimator, getSingleEstimator } = require("../controllers/estimatorController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../excelFiles");
@@ -22,5 +22,7 @@ const router = express.Router();
 
 router.post("/", auth, createEstimator);
 router.get("/", auth, getAllEstimator);
+router.get("/:estimatorId",auth, getSingleEstimator);
 router.get("/total/:estimatorId", auth, getTotalFromMaterial);
+router.delete("/:estimatorId",auth, deleteEstimator);
 module.exports = router;
