@@ -17,6 +17,8 @@ const templateRoutes = require("./routes/templateRoutes");
 const estimatorTemplateRoutes = require("./routes/estimatorTemplateRoutes");
 const estimatorRoutes = require("./routes/estimatorRoutes");
 const materialRoutes = require("./routes/materialRoutes");
+const categoriesRoutes = require("./routes/categoriesRoute");
+const productsRoutes = require("./routes/productRoute");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -53,6 +55,8 @@ app.use("/api/templates", templateRoutes);
 app.use("/api/estimatorTemplates", estimatorTemplateRoutes);
 app.use("/api/estimators", estimatorRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/categories", categoriesRoutes);
+app.use("/api/products", productsRoutes);
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));

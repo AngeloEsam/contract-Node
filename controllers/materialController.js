@@ -6,6 +6,7 @@ const path = require("path");
 const excelToJson = require("convert-excel-to-json");
 const Project = require("../models/projectModel");
 const workItemModel = require("../models/workItemModel");
+const ProductModel = require("../models/productModel");
 const addMaterial = async (req, res) => {
   try {
     const {
@@ -102,11 +103,22 @@ const getAllMaterials = async (req, res) => {
         .status(401)
         .json({ error: "Unauthorized: User not logged in." });
     }
-    const materials = await Material.find({ userId: req.user._id })
+    const materials = await Material.find({
+      userId: req.user._id,
+      category: "Material",
+    })
+      .populate("projectName", "projectName")
+      .populate("contract", "code name")
+      .populate("boqLineItem", "workItemName")
+      .populate("materialName", "name");
+    const materialss = await Material.find({
+      userId: req.user._id,
+      category: "Labor" || "Equipment" || "OtherCost",
+    })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName");
-    res.status(200).json({ data: materials });
+    res.status(200).json({ material: materials, other: materialss });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -289,6 +301,7 @@ const insertMaterial = async (req, res) => {
     for (const row of sheetData) {
       const project = await Project.find({ projectName: row["projectName"] });
       const contract = await Contract.find({ code: row["contract"] });
+      const product = await ProductModel.findOne({ name: row["materialName"] });
       const workItem = await workItemModel.find({
         workItemName: row["boqLineItem"],
       });
@@ -299,7 +312,8 @@ const insertMaterial = async (req, res) => {
         boqLineItem: applyOn == "BOQ Line" ? workItem._id : null,
         applyOn: applyOn,
         category: category,
-        materialName: row["materialName"],
+        materialName:
+          category == "Material" ? product._id : row["materialName"],
         unitOfMeasure: row["unitOfMeasure"],
         quantity: row["quantity"],
         cost: row["cost"],
