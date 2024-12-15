@@ -223,7 +223,7 @@ const getUserGroupsOfNames = async (req, res) => {
   const { _id } = req.user;
   try {
     const user = await User.findById(_id).populate("usersGroup");
-    const parentName=user.firstName+" "+user.secondName
+    const parentName = user.firstName + " " + user.secondName;
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -232,7 +232,7 @@ const getUserGroupsOfNames = async (req, res) => {
     );
     res.status(200).json({
       message: "Groups fetched successfully",
-      groups: [...groups,parentName],
+      groups: [...groups, parentName],
     });
   } catch (error) {
     res
@@ -342,7 +342,7 @@ const searchProjects = async (req, res) => {
 
 const duplicateProject = async (req, res) => {
   try {
-    const userId = req.user._id;  
+    const userId = req.user._id;
     const { projectId } = req.params;
 
     const originalProject = await Project.findById(projectId);
@@ -350,9 +350,9 @@ const duplicateProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
     const duplicatedProject = new Project({
-      ...originalProject.toObject(),  
-      projectName: `${originalProject.projectName} - Copy`,  
-      userId: userId, 
+      ...originalProject.toObject(),
+      projectName: `${originalProject.projectName} - Copy`,
+      userId: userId,
       _id: undefined,
       contracts: [],
     });
@@ -369,7 +369,7 @@ const duplicateProject = async (req, res) => {
 };
 
 const getProjectContracts = async (req, res) => {
-  const { projectId } = req.params; 
+  const { projectId } = req.params;
   try {
     if (!req.user || !req.user._id) {
       return res
@@ -395,7 +395,17 @@ const getProjectContracts = async (req, res) => {
   }
 };
 
-
+const getUserProjectNames = async (req, res) => {
+  try {
+    const projects = await Project.find({ userId: req.user._id }).select(
+      "projectName"
+    );
+    const projectNames = projects.map((project) => project.projectName);
+    return res.status(200).json({ data:projectNames });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   createProject,
@@ -408,5 +418,6 @@ module.exports = {
   getProjectStatusSummary,
   searchProjects,
   duplicateProject,
-  getProjectContracts
+  getProjectContracts,
+  getUserProjectNames
 };

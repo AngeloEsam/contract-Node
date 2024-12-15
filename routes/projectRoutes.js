@@ -15,6 +15,7 @@ const {
   searchProjects,
   duplicateProject,
   getProjectContracts,
+  getUserProjectNames,
 } = require("../controllers/projectController.js");
 
 //upload image
@@ -49,6 +50,8 @@ router.post("/create", auth, upload.array("documents", 10), createProject);
 router.post('/duplicate/:projectId', auth, duplicateProject);
 //get projects for user
 router.get("/", auth, getUserProjects);
+//get all projects (names) for user
+router.get("/names", auth, getUserProjectNames);
 //get all projects
 router.get("/all", auth, getAllProjects);
 //get names of userGroup
