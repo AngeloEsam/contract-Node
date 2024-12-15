@@ -209,8 +209,6 @@ const updateWorkItem = async (req, res) => {
   }
 };
 
-
-
 const deleteWork = async (req, res) => {
   try {
     const { id } = req.params;
@@ -231,125 +229,6 @@ const deleteWork = async (req, res) => {
   }
 };
 
-// const insertSheet = async (req, res) => {
-//   const { contractId } = req.params;
-//   const { _id: userId } = req.user;
-
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ message: "No file found" });
-//     }
-
-//     const filePath = path.join(__dirname, "../excelFiles", req.file.filename);
-
-//     const excelData = excelToJson({
-//       sourceFile: filePath,
-//       header: { rows: 1 },
-//       columnToKey: {
-//         A: "itemName",
-//         B: "subItemName",
-//         C: "workItemName",
-//         D: "unitOfMeasure",
-//         E: "assignedQuantity",
-//         F: "previousQuantity",
-//         G: "remainingQuantity",
-//         H: "financialCategory",
-//         I: "price",
-//       },
-//     });
-
-//     const sheetName = Object.keys(excelData)[0];
-//     const sheetData = excelData[sheetName];
-//     if (!sheetData || sheetData.length === 0) {
-//       return res
-//         .status(400)
-//         .json({ message: "No data found in the Excel file" });
-//     }
-
-//     let totalOfTotal = 0;
-//     const mainItemIds = new Set();
-
-//     for (const row of sheetData) {
-//       const total = (row["assignedQuantity"] || 0) * (row["price"] || 0);
-//       totalOfTotal += total;
-
-//       const workDetails = {
-//         unitOfMeasure: row["unitOfMeasure"],
-//         assignedQuantity: row["assignedQuantity"] || 0,
-//         previousQuantity: row["previousQuantity"],
-//         remainingQuantity: row["remainingQuantity"],
-//         financialCategory: row["financialCategory"],
-//         price: row["price"] || 0,
-//         total,
-//       };
-//       let contract = await Contract.findById(contractId)
-//       contract.mainId.map(async(mainItem)=>{
-//         let mainItem = await mainItemModel.findOne({ itemName: row["itemName"] });
-//         if (!mainItem) {
-//           mainItem = await mainItemModel.create({ itemName: row["itemName"] });
-//         }
-
-//         mainItemIds.add(mainItem._id.toString());
-
-//         let subItem = await subItemModel.findOne({
-//           subItemName: row["subItemName"],
-//           _id: { $in: mainItem.subItems },
-//         });
-
-//         if (!subItem) {
-//           subItem = await subItemModel.create({
-//             subItemName: row["subItemName"],
-//             workItems: [],
-//           });
-//           mainItem.subItems.push(subItem._id);
-//           await mainItem.save();
-//         }
-
-//         const workItem = await WorkItem.create({
-//           workItemName: row["workItemName"],
-//           workDetails,
-//           userId,
-//         });
-
-//         subItem.workItems.push(workItem._id);
-//         await subItem.save();
-//       })
-
-//     }
-
-//     // تحديث إجمالي العقد وقيمة الضريبة والدفعة المقدمة
-//     const contract = await Contract.findById(contractId);
-//     if (!contract) {
-//       return res.status(404).json({ message: "Contract not found" });
-//     }
-
-//     const updatedTotal = contract.total + totalOfTotal;
-//     const taxValue = (updatedTotal * (contract.taxRate || 0)) / 100;
-//     const downPaymentValue = ((updatedTotal + taxValue) * (contract.downPaymentRate || 0)) / 100;
-
-//     const contractUpdated = await Contract.findByIdAndUpdate(
-//       contractId,
-//       {
-//         $inc: { total: totalOfTotal },
-//         taxValue,
-//         downPaymentValue,
-//         totalContractValue: updatedTotal + taxValue,
-//         dueAmount: updatedTotal + taxValue - downPaymentValue,
-//         $addToSet: { mainId: { $each: [...mainItemIds] } },
-//       },
-//       { new: true }
-//     );
-
-//     fs.unlink(filePath, (err) => {
-//       if (err) console.error("Error deleting file:", err);
-//     });
-
-//     res.status(201).json({ message: "Success", totalOfTotal, contractUpdated });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 const insertSheet = async (req, res) => {
   const { contractId } = req.params;
   const { _id: userId } = req.user;
@@ -473,185 +352,6 @@ const insertSheet = async (req, res) => {
   }
 };
 
-// const insertSheet = async (req, res) => {
-//   const { contractId } = req.params;
-//   const { _id: userId } = req.user;
-//   let updateMain;
-//   let updateSub;
-//   let updateContract;
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ message: "No file found" });
-//     }
-
-//     const filePath = path.join(__dirname, "../excelFiles", req.file.filename);
-
-//     const excelData = excelToJson({
-//       sourceFile: filePath,
-//       header: { rows: 1 },
-//       columnToKey: {
-//         A: "itemName",
-//         B: "subItemName",
-//         C: "workItemName",
-//         D: "unitOfMeasure",
-//         E: "assignedQuantity",
-//         F: "previousQuantity",
-//         G: "remainingQuantity",
-//         H: "financialCategory",
-//         I: "price",
-//       },
-//     });
-
-//     const sheetName = Object.keys(excelData)[0];
-//     const sheetData = excelData[sheetName];
-//     if (!sheetData || sheetData.length === 0) {
-//       return res
-//         .status(400)
-//         .json({ message: "No data found in the Excel file" });
-//     }
-
-//     let totalOfTotal = 0;
-//     const mainItemIds = new Set();
-
-//     for (const row of sheetData) {
-//       const total = (row["assignedQuantity"] || 0) * (row["price"] || 0);
-//       totalOfTotal += total;
-
-//       const workDetails = {
-//         unitOfMeasure: row["unitOfMeasure"],
-//         assignedQuantity: row["assignedQuantity"] || 0,
-//         previousQuantity: row["previousQuantity"],
-//         remainingQuantity: row["remainingQuantity"],
-//         financialCategory: row["financialCategory"],
-//         price: row["price"] || 0,
-//         total,
-//       };
-//       let contract = await Contract.findById(contractId).populate({
-//         path: "mainId",
-//         sort: { createdAt: -1 },
-//         populate: {
-//           path: "subItems",
-//           populate: {
-//             path: "workItems",
-//           },
-//         },
-//       });
-
-//       contract.mainId.map(async (mainItem) => {
-//         if (mainItem.itemName == row["itemName"]) {
-//           mainItem.subItems.map(async (subItem) => {
-//             if (subItem.subItemName == row["subItemName"]) {
-//               const workItem = await WorkItem.create({
-//                 workItemName: row["workItemName"],
-//                 workDetails,
-//                 userId,
-//               });
-//               updateSub = await subItemModel.findByIdAndUpdate(
-//                 subItem._id,
-//                 {
-//                   workItems: [...subItem.workItems, workItem._id],
-//                 },
-//                 { new: true }
-//               );
-//               updateMain = await mainItemModel.findByIdAndUpdate(
-//                 mainItem._id,
-//                 {
-//                   subItems: [...mainItem.subItems, subItem._id],
-//                 },
-//                 { new: true }
-//               );
-//               updateContract = await Contract.findOneAndUpdate(
-//                 { _id: contractId },
-//                 {
-//                   $inc: { total: totalOfTotal },
-//                   // $addToSet: { mainId: { $each: [...mainItemIds] } },
-//                 },
-//                 { new: true }
-//               );
-//               // subItem.workItems.push(workItem._id);
-//               //await subItem.save();
-//             } else {
-//               subItem = await subItemModel.create({
-//                 subItemName: row["subItemName"],
-//                 workItems: [],
-//               });
-//               updateMain = await mainItemModel.findByIdAndUpdate(
-//                 mainItem._id,
-//                 {
-//                   subItems: [...mainItem.subItems, subItem._id],
-//                 },
-//                 { new: true }
-//               );
-//               mainItem.subItems.push(subItem._id);
-//               await mainItem.save();
-//             }
-//           });
-//         } else {
-//           mainItem = await mainItemModel.create({
-//             itemName: row["itemName"],
-//             subItems: [],
-//           });
-//           const workItem = await WorkItem.create({
-//             workItemName: row["workItemName"],
-//             workDetails,
-//             userId,
-//           });
-//           updateSub = await subItemModel.findByIdAndUpdate(
-//             subItem._id,
-//             {
-//               workItems: [...subItem.workItems, workItem._id],
-//             },
-//             { new: true }
-//           );
-//           updateMain = await mainItemModel.findByIdAndUpdate(
-//             mainItem._id,
-//             {
-//               subItems: [...mainItem.subItems, subItem._id],
-//             },
-//             { new: true }
-//           );
-//           updateContract = await Contract.findOneAndUpdate(
-//             { _id: contractId },
-//             {
-//               $inc: { total: totalOfTotal },
-//               $addToSet: { mainId: { $each: [...mainItemIds] } },
-//             },
-//             { new: true }
-//           );
-//         }
-//       });
-//     }
-//     //   let mainItem = await mainItemModel.findOne({ itemName: row["itemName"] });
-//     //   if (!mainItem) {
-//     //     mainItem = await mainItemModel.create({ itemName: row["itemName"] });
-//     //   }
-
-//     //   mainItemIds.add(mainItem._id.toString());
-
-//     //   let subItem = await subItemModel.findOne({
-//     //     subItemName: row["subItemName"],
-//     //     _id: { $in: mainItem.subItems },
-//     //   });
-
-//     //   if (!subItem) {
-//     //   }
-//     // }
-
-//     // if (!contractUpdated) {
-//     //   return res.status(404).json({ message: "Contract not found" });
-//     // }
-
-//     fs.unlink(filePath, (err) => {
-//       if (err) console.error("Error deleting file:", err);
-//     });
-//     console.log(updateContract,updateSub,updateMain)
-//     res.status(201).json({ message: "Success", totalOfTotal });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 const addSingleBoq = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -743,95 +443,6 @@ const addSingleBoq = async (req, res) => {
   }
 };
 
-// const addSingleBoq = async (req, res) => {
-//   try {
-//     const userId = req.user._id;
-//     const { contractId } = req.params;
-//     let assignedQuantity = parseFloat(req.body.assignedQuantity) || 0;
-//     let price = parseFloat(req.body.price) || 0;
-
-//     const {
-//       workItemName,
-//       unitOfMeasure,
-//       previousQuantity,
-//       remainingQuantity,
-//       financialCategory,
-//       itemName,
-//       subItemName,
-//     } = req.body;
-
-//     let total = assignedQuantity * price;
-
-//     let mainItem = await mainItemModel.findOne({ itemName });
-//     if (!mainItem) {
-//       mainItem = await mainItemModel.create({ itemName });
-//     }
-
-//     let subItem = await subItemModel.findOne({
-//       subItemName,
-//       _id: { $in: mainItem.subItems },
-//     });
-//     if (!subItem) {
-//       subItem = await subItemModel.create({
-//         subItemName,
-//         workItems: [],
-//       });
-//       mainItem.subItems.push(subItem._id);
-//       await mainItem.save();
-//     }
-
-//     let workItem = await WorkItem.create({
-//       workItemName,
-//       workDetails: {
-//         unitOfMeasure,
-//         assignedQuantity,
-//         previousQuantity,
-//         remainingQuantity,
-//         financialCategory,
-//         price,
-//         total,
-//       },
-//       userId,
-//     });
-
-//     const contract = await Contract.findById(contractId);
-//     if (!contract) {
-//       return res
-//         .status(404)
-//         .json({ message: "Contract not found for the specified user." });
-//     }
-
-//     // تحديث التوتال والضرائب
-//     const updatedTotal = contract.total + total;
-//     const taxValue = (updatedTotal * (contract.taxRate || 0)) / 100;
-//     const downPaymentValue =
-//       ((updatedTotal + taxValue) * (contract.downPaymentRate || 0)) / 100;
-
-//     const contractUpdated = await Contract.findByIdAndUpdate(
-//       contractId,
-//       {
-//         $inc: { total: total },
-//         taxValue,
-//         downPaymentValue,
-//         totalContractValue: updatedTotal + taxValue,
-//         dueAmount: updatedTotal + taxValue - downPaymentValue,
-//         $addToSet: { mainId: mainItem._id },
-//       },
-//       { new: true }
-//     );
-
-//     subItem.workItems.push(workItem._id);
-//     await subItem.save();
-
-//     res
-//       .status(201)
-//       .json({ data: { mainItem, subItem, workItem, contractUpdated } });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 const getWorkItemsForContract = async (req, res) => {
   const { contractId } = req.params;
   try {
@@ -858,6 +469,32 @@ const getWorkItemsForContract = async (req, res) => {
     return res.status(400).json({ message: e.message });
   }
 };
+const getWorkItemsNameForContract = async (req, res) => {
+  const { contractId } = req.params;
+  try {
+    const contract = await Contract.findById(contractId).populate({
+      path: "mainId",
+      populate: {
+        path: "subItems",
+      },
+    });
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    let workItemss = [];
+    contract.mainId.map((item) => {
+      item.subItems.map((sub) => {
+        sub.workItems.map(async (workId) => {
+          workItemss.push(workId);
+        });
+      });
+    });
+    const workItemsss = await WorkItem.find({ _id: { $in: workItemss } }).select('workItemName _id');
+    res.status(201).json({ data: workItemsss });
+  } catch (e) {
+    return res.status(400).json({ message: e.message });
+  }
+};
 module.exports = {
   addWorkDetailsItem,
   getAllWorkItems,
@@ -868,6 +505,7 @@ module.exports = {
   insertSheet,
   addSingleBoq,
   getWorkItemsForContract,
+  getWorkItemsNameForContract
 };
 
 // const deleteBoq = async (req, res) => {

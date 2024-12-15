@@ -12,6 +12,7 @@ const {
   getWorkItemTotals,
   addSingleBoq,
   getWorkItemsForContract,
+  getWorkItemsNameForContract,
 } = require("../controllers/workItemController");
 const { auth } = require("../middlewares/auth");
 const storage = multer.diskStorage({
@@ -35,6 +36,7 @@ router.post("/:userId", addWorkDetailsItem);
 router.post("/sheet/:contractId", auth, upload.single("file"), insertSheet);
 router.get("/", getAllWorkItems);
 router.get("/:contractId", auth, getWorkItemsForContract);
+router.get("/names/:contractId", auth, getWorkItemsNameForContract);
 router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
