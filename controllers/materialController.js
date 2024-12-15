@@ -335,6 +335,23 @@ const insertMaterial = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getAllByCategoryNames = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const validCategories = ["Labor", "Equipment", "OtherCost"];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ message: "Invalid category provided." });
+    }
+    const materials = await Material.find({ category, userId: req.user._id }).select('materialName')
+
+    res.status(200).json({ data: materials });
+  } catch (error) {
+    console.error("Error fetching materials by category:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch materials by category.", error });
+  }
+};
 module.exports = {
   addMaterial,
   getAllMaterials,
@@ -343,4 +360,5 @@ module.exports = {
   calculateSalesAndTax,
   getAllByCategory,
   insertMaterial,
+  getAllByCategoryNames
 };

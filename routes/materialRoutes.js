@@ -11,6 +11,7 @@ const {
   calculateSalesAndTax,
   getAllByCategory,
   insertMaterial,
+  getAllByCategoryNames,
 } = require("../controllers/materialController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,6 +33,7 @@ router.post("/", auth, addMaterial);
 router.post("/:estimatorId", auth, upload.single("file"), insertMaterial);
 router.get("/", auth, getAllMaterials);
 router.get("/:category", auth, getAllByCategory);
+router.get("/names/:category", auth, getAllByCategoryNames);
 router.get("/single/:materialId", auth, getSingleMaterial);
 router.delete("/:materialId", auth, deleteMaterial);
 router.put("/calculate", auth, calculateSalesAndTax);
