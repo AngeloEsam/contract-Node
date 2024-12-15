@@ -179,10 +179,24 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
+const getProductNames = async (req, res) => {
+  try {
+    const products = await Product.find({ userId: req.user._id }).select(
+      "name"
+    );
+    // const productNames = products.map((product) => product.name);
+    return res.status(200).json({ data: products });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
 module.exports = {
   getProducts,
   postProduct,
   getProduct,
   updateProduct,
   deleteProduct,
+  getProductNames,
 };
