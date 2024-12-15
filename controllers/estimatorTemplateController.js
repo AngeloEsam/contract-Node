@@ -59,7 +59,7 @@ const saveAsTemplate = async (req, res) => {
 const getAllEstimatorTemplates = async (req, res) => {
   try {
     const userId = req.user._id;
-    const templates = await estimatorTemplateModel.find({ userId });
+    const templates = await estimatorTemplateModel.find({ userId }).select('-materials');
     res
       .status(200)
       .json({ message: "Templates retrieved successfully.", templates });
@@ -81,16 +81,20 @@ const getSingleEstimatorTemplate = async (req, res) => {
     if (!template) {
       return res.status(404).json({ message: "Template not found." });
     }
-    res.status(200).json({ message: "Template retrieved successfully.", template });
+    res
+      .status(200)
+      .json({ message: "Template retrieved successfully.", template });
   } catch (error) {
     console.error("Error retrieving template:", error);
-    res.status(500).json({ message: "Failed to retrieve template.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to retrieve template.", error: error.message });
   }
 };
 const deleteEstimatorTemplate = async (req, res) => {
   try {
     const { templateId } = req.params;
-    const userId = req.user._id; 
+    const userId = req.user._id;
     if (!templateId) {
       return res.status(400).json({ message: "Template ID is required." });
     }
@@ -100,19 +104,41 @@ const deleteEstimatorTemplate = async (req, res) => {
       return res.status(404).json({ message: "Template not found." });
     }
     if (template.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "You are not authorized to delete this template." });
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this template." });
     }
     await estimatorTemplateModel.findByIdAndDelete(templateId);
     res.status(200).json({ message: "Template deleted successfully." });
   } catch (error) {
     console.error("Error deleting template:", error);
-    res.status(500).json({ message: "Failed to delete template.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to delete template.", error: error.message });
   }
 };
-
+const getEstimatorTemplateCategories = async (req, res) => {
+  try {
+    const estimatorTemplates = await estimatorTemplateModel.find(
+      { userId: req.user._id },
+      "name"
+    );
+    res.status(200).json({
+      message: "Template names fetched successfully",
+      data: estimatorTemplates,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching template names",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   saveAsTemplate,
   getAllEstimatorTemplates,
   getSingleEstimatorTemplate,
-  deleteEstimatorTemplate
+  deleteEstimatorTemplate,
+  getEstimatorTemplateCategories,
 };

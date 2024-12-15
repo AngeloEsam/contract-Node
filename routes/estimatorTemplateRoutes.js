@@ -3,7 +3,13 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const { auth } = require("../middlewares/auth");
-const { saveAsTemplate, getAllEstimatorTemplates, getSingleEstimatorTemplate, deleteEstimatorTemplate } = require("../controllers/estimatorTemplateController");
+const {
+  saveAsTemplate,
+  getAllEstimatorTemplates,
+  getSingleEstimatorTemplate,
+  deleteEstimatorTemplate,
+  getEstimatorTemplateCategories,
+} = require("../controllers/estimatorTemplateController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../excelFiles");
@@ -20,8 +26,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const router = express.Router();
 
-router.post("/save",auth, saveAsTemplate);
-router.get("/",auth, getAllEstimatorTemplates);
-router.get("/:templateId",auth, getSingleEstimatorTemplate);
-router.delete("/:templateId",auth, deleteEstimatorTemplate);
+router.post("/save", auth, saveAsTemplate);
+router.get("/", auth, getAllEstimatorTemplates);
+router.get("/categories",auth, getEstimatorTemplateCategories);
+router.get("/:templateId", auth, getSingleEstimatorTemplate);
+router.delete("/:templateId", auth, deleteEstimatorTemplate);
 module.exports = router;

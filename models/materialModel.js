@@ -14,7 +14,7 @@ const materialCostSchema = new mongoose.Schema(
       required: true,
       ref: "Estimator",
     },
-    applyOn: { type: String, enum: ["Whole BOQ", "BOQ Line"], required: true },
+    applyOn: { type: String, enum: ["Whole BOQ", "BOQ Lines"], required: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

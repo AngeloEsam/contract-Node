@@ -37,7 +37,7 @@ const addMaterial = async (req, res) => {
         .status(400)
         .json({ error: "BOQ Line is required when applyOn is 'BOQ Line'." });
     }
-    if (applyOn === "BOQ Line") {
+    if (applyOn === "BOQ Lines") {
       const contractDetails = await Contract.findOne({
         _id: contract,
       }).populate({
@@ -78,7 +78,7 @@ const addMaterial = async (req, res) => {
       applyOn,
       category,
       userId,
-      boqLineItem: applyOn === "BOQ Line" ? boqLineItem : null,
+      boqLineItem: applyOn === "BOQ Lines" ? boqLineItem : null,
       materialName,
       unitOfMeasure,
       quantity,
@@ -93,7 +93,7 @@ const addMaterial = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 const getAllMaterials = async (req, res) => {
@@ -309,7 +309,7 @@ const insertMaterial = async (req, res) => {
       const materialDetails = {
         projectName: project._id,
         contract: contract._id,
-        boqLineItem: applyOn == "BOQ Line" ? workItem._id : null,
+        boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
         applyOn: applyOn,
         category: category,
         materialName:
