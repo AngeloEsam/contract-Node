@@ -9,6 +9,7 @@ const {
   getSingleEstimatorTemplate,
   deleteEstimatorTemplate,
   getEstimatorTemplateCategories,
+  getEstimatorTemplateNames,
 } = require("../controllers/estimatorTemplateController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -29,6 +30,7 @@ const router = express.Router();
 router.post("/save", auth, saveAsTemplate);
 router.get("/", auth, getAllEstimatorTemplates);
 router.get("/categories",auth, getEstimatorTemplateCategories);
+router.get("/names",auth, getEstimatorTemplateNames);
 router.get("/:templateId", auth, getSingleEstimatorTemplate);
 router.delete("/:templateId", auth, deleteEstimatorTemplate);
 module.exports = router;

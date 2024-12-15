@@ -121,6 +121,24 @@ const getEstimatorTemplateCategories = async (req, res) => {
   try {
     const estimatorTemplates = await estimatorTemplateModel.find(
       { userId: req.user._id },
+      "category"
+    );
+    res.status(200).json({
+      message: "Template categories fetched successfully",
+      data: estimatorTemplates,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching template names",
+      error: error.message,
+    });
+  }
+};
+const getEstimatorTemplateNames = async (req, res) => {
+  try {
+    const estimatorTemplates = await estimatorTemplateModel.find(
+      { userId: req.user._id },
       "name"
     );
     res.status(200).json({
@@ -141,4 +159,5 @@ module.exports = {
   getSingleEstimatorTemplate,
   deleteEstimatorTemplate,
   getEstimatorTemplateCategories,
+  getEstimatorTemplateNames
 };
