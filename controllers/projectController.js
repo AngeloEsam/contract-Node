@@ -398,10 +398,10 @@ const getProjectContracts = async (req, res) => {
 const getUserProjectNames = async (req, res) => {
   try {
     const projects = await Project.find({ userId: req.user._id }).select(
-      "projectName"
+      "projectName _id"
     );
-    const projectNames = projects.map((project) => project.projectName);
-    return res.status(200).json({ data:projectNames });
+    // const projectNames = projects.map((project) => project.projectName);
+    return res.status(200).json({ data:projects });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
