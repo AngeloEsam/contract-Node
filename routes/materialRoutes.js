@@ -32,7 +32,7 @@ const router = express.Router();
 router.post("/", auth, addMaterial);
 router.post("/:estimatorId", auth, upload.single("file"), insertMaterial);
 router.get("/", auth, getAllMaterials);
-router.get("/:category", auth, getAllByCategory);
+router.get("/:category/:estimatorId", auth, getAllByCategory);
 router.get("/names/:category", auth, getAllByCategoryNames);
 router.get("/single/:materialId", auth, getSingleMaterial);
 router.delete("/:materialId", auth, deleteMaterial);

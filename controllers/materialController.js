@@ -21,7 +21,6 @@ const addMaterial = async (req, res) => {
       quantity,
       cost,
     } = req.body;
-
     if (!req.user || !req.user._id) {
       return res
         .status(401)
@@ -241,12 +240,16 @@ const calculateSalesAndTax = async (req, res) => {
 };
 const getAllByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
+    const { category, estimatorId } = req.params;
     const validCategories = ["Material", "Labor", "Equipment", "OtherCost"];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ message: "Invalid category provided." });
     }
-    const materials = await Material.find({ category, userId: req.user._id })
+    const materials = await Material.find({
+      category,
+      userId: req.user._id,
+      estimatorId,
+    })
       .populate("projectName", "projectName")
       .populate("contract", "code name")
       .populate("boqLineItem", "workItemName")
@@ -342,7 +345,10 @@ const getAllByCategoryNames = async (req, res) => {
     if (!validCategories.includes(category)) {
       return res.status(400).json({ message: "Invalid category provided." });
     }
-    const materials = await Material.find({ category, userId: req.user._id }).select('materialName')
+    const materials = await Material.find({
+      category,
+      userId: req.user._id,
+    }).select("materialName");
 
     res.status(200).json({ data: materials });
   } catch (error) {
@@ -360,5 +366,5 @@ module.exports = {
   calculateSalesAndTax,
   getAllByCategory,
   insertMaterial,
-  getAllByCategoryNames
+  getAllByCategoryNames,
 };

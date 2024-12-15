@@ -4,11 +4,17 @@ const materialModel = require("../models/materialModel");
 const createEstimator = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { name } = req.body;
+    const { name, projectName, contract, applyOn } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
-    const newEstimator = new estimatorModel({ name, userId });
+    const newEstimator = new estimatorModel({
+      name,
+      userId,
+      projectName,
+      contract,
+      applyOn,
+    });
     await newEstimator.save();
     res
       .status(201)
@@ -20,7 +26,10 @@ const createEstimator = async (req, res) => {
 const getAllEstimator = async (req, res) => {
   try {
     const userId = req.user._id;
-    const estimators = await estimatorModel.find({ userId });
+    const estimators = await estimatorModel
+      .find({ userId })
+      .populate("projectName", "projectName")
+      .populate("contract", "code name");
     res.status(200).json({ data: estimators });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -89,7 +98,10 @@ const getSingleEstimator = async (req, res) => {
   try {
     const { estimatorId } = req.params;
     const userId = req.user._id;
-    const estimator = await estimatorModel.findById(estimatorId);
+    const estimator = await estimatorModel
+      .findById(estimatorId)
+      .populate("projectName", "projectName")
+      .populate("contract", "code name");
     if (!estimator) {
       return res.status(404).json({ message: "Estimator not found" });
     }
@@ -136,5 +148,5 @@ module.exports = {
   getAllEstimator,
   getTotalFromMaterial,
   deleteEstimator,
-  getSingleEstimator
+  getSingleEstimator,
 };
