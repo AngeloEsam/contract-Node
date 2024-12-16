@@ -30,7 +30,7 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post("/", auth, addMaterial);
-router.post("/calculate", auth, calculateSalesAndTax);
+router.post("/calculate/:estimatorId", auth, calculateSalesAndTax);
 router.post("/:estimatorId", auth, upload.single("file"), insertMaterial);
 router.get("/", auth, getAllMaterials);
 router.get("/:category/:estimatorId", auth, getAllByCategory);

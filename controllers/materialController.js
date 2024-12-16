@@ -180,6 +180,7 @@ const deleteMaterial = async (req, res) => {
 
 const calculateSalesAndTax = async (req, res) => {
   try {
+    const { estimatorId } = req.params;
     const { showSales, includeTax, taxValue, profitMargin, category } =
       req.body;
 
@@ -196,7 +197,10 @@ const calculateSalesAndTax = async (req, res) => {
     if (includeTax && (isNaN(taxValue) || taxValue < 0)) {
       return res.status(400).json({ message: "Invalid or missing taxValue" });
     }
-    const materials = await Material.find({ category: category });
+    const materials = await Material.find({
+      category: category,
+      estimatorId: estimatorId,
+    });
 
     const updatedMaterials = materials.map(async (material) => {
       const updatedMaterial = { ...material._doc };
