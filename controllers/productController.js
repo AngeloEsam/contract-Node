@@ -182,7 +182,7 @@ const deleteProduct = async (req, res, next) => {
 const getProductNames = async (req, res) => {
   try {
     const products = await Product.find({ userId: req.user._id }).select(
-      "name"
+      "name price uom"
     );
     // const productNames = products.map((product) => product.name);
     return res.status(200).json({ data: products });

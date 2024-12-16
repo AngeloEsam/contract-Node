@@ -198,7 +198,6 @@ const calculateSalesAndTax = async (req, res) => {
     }
     const materials = await Material.find({ category: category });
 
-    // تعديل البيانات بناءً على المعطيات
     const updatedMaterials = materials.map(async (material) => {
       const updatedMaterial = { ...material._doc };
 
@@ -217,8 +216,12 @@ const calculateSalesAndTax = async (req, res) => {
         { _id: material._id },
         {
           $set: {
-            profitMargin: profitMargin || material.profitMargin,
-            taxValue: taxValue || material.taxValue,
+            showSales,
+            includeTax,
+            // profitMargin: profitMargin || material.profitMargin,
+            // taxValue: taxValue || material.taxValue,
+            profitMargin: profitMargin,
+            taxValue: taxValue,
             profitValue: updatedMaterial.profitValue || material.profitValue,
             taxDeductedValue:
               updatedMaterial.taxDeductedValue || material.taxDeductedValue,
@@ -235,7 +238,7 @@ const calculateSalesAndTax = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: error.message });
   }
 };
 const getAllByCategory = async (req, res) => {
