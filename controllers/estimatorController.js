@@ -1,5 +1,7 @@
+const Contract = require("../models/contractModel");
 const estimatorModel = require("../models/estimatorModel");
 const materialModel = require("../models/materialModel");
+const Project = require("../models/projectModel");
 
 const createEstimator = async (req, res) => {
   try {
@@ -100,7 +102,6 @@ const getRiskFactorByEstimatorId = async (req, res) => {
     const estimator = await estimatorModel
       .findOne({ _id: estimatorId, userId: req.user._id })
       .select("riskFactor");
-    console.log(estimator);
     if (!estimator) {
       return res.status(404).json({ message: "Estimator not found" });
     }
@@ -159,51 +160,111 @@ const deleteEstimator = async (req, res) => {
   }
 };
 
+// const searchEstimators = async (req, res) => {
+//   try {
+//     const { projectName, contract, name } = req.query;
+
+//     if (!req.user || !req.user._id) {
+//       return res.status(401).json({ message: "Unauthorized. User ID is required." });
+//     }
+
+//     const orConditions = [];
+
+//     // البحث بالـ name
+//     if (name) {
+//       orConditions.push({ name: { $regex: name, $options: "i" } });
+//     }
+
+//     // البحث بالـ contract code
+//     if (contract) {
+//       orConditions.push({ "contract.code": { $regex: contract, $options: "i" } });
+//     }
+
+//     // البحث بالـ projectName داخل Project
+//     if (projectName) {
+//       orConditions.push({ "projectName.projectName": { $regex: projectName, $options: "i" } });
+//     }
+
+//     // لو مفيش شروط
+//     if (orConditions.length === 0) {
+//       return res.status(400).json({ message: "Please provide at least one query parameter." });
+//     }
+
+//     const filter = {
+//       userId: req.user._id,
+//       $or: orConditions,
+//     };
+
+//     const estimators = await estimatorModel
+//       .find(filter)
+//       .populate({
+//         path: "projectName",
+//         select: "projectName",
+//       })
+//       .populate({
+//         path: "contract",
+//         select: "code name",
+//       });
+
+//     if (estimators.length === 0) {
+//       return res.status(404).json({ data: [], message: "No matching estimators found." });
+//     }
+
+//     return res.status(200).json({ data: estimators });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 const searchEstimators = async (req, res) => {
   try {
-    const { projectName, contractCode, estimatorName } = req.query;
+    const { projectName, contract, name } = req.query;
+
     if (!req.user || !req.user._id) {
       return res
         .status(401)
         .json({ message: "Unauthorized. User ID is required." });
     }
+
+    const orConditions = [];
+    if (name) {
+      orConditions.push({ name: { $regex: name, $options: "i" } });
+    }
+    if (projectName) {
+      const projects = await Project.find({
+        projectName: { $regex: projectName, $options: "i" },
+      });
+
+      const projectIds = projects.map((project) => project._id);
+      if (projectIds.length > 0) {
+        orConditions.push({ projectName: { $in: projectIds } });
+      }
+    }
+    if (contract) {
+      const contracts = await Contract.find({
+        code: { $regex: contract, $options: "i" },
+      });
+
+      const contractIds = contracts.map((contract) => contract._id);
+      if (contractIds.length > 0) {
+        orConditions.push({ contract: { $in: contractIds } });
+      }
+    }
     const filter = {
       userId: req.user._id,
-      $or: [],
+      ...(orConditions.length > 0 && { $or: orConditions }),
     };
-    if (projectName) {
-      filter.$or.push({
-        "projectName.projectName": { $regex: projectName, $options: "i" },
-      });
-    }
-    if (contractCode) {
-      filter.$or.push({
-        "contract.code": { $regex: contractCode, $options: "i" },
-      });
-    }
 
-    if (estimatorName) {
-      filter.$or.push({
-        name: { $regex: estimatorName, $options: "i" },
-      });
-    }
     const estimators = await estimatorModel
       .find(filter)
-      .populate({
-        path: "projectName",
-        select: "projectName",
-      })
-      .populate({
-        path: "contract",
-        select: "code name",
-      });
-    return res.status(200).json(estimators);
+      .populate({ path: "projectName", select: "projectName" })
+      .populate({ path: "contract", select: "code name" });
+    return res.status(200).json({ data: estimators });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+
+
 
 module.exports = {
   createEstimator,
