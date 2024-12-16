@@ -94,6 +94,21 @@ const getTotalFromMaterial = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getRiskFactorByEstimatorId = async (req, res) => {
+  try {
+    const { estimatorId } = req.params;
+    const estimator = await estimatorModel
+      .findOne({ _id: estimatorId, userId: req.user._id })
+      .select("riskFactor");
+    console.log(estimator);
+    if (!estimator) {
+      return res.status(404).json({ message: "Estimator not found" });
+    }
+    return res.status(200).json({ riskFactor: estimator });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 const getSingleEstimator = async (req, res) => {
   try {
     const { estimatorId } = req.params;
@@ -143,10 +158,59 @@ const deleteEstimator = async (req, res) => {
       .json({ message: "An error occurred while deleting the estimator" });
   }
 };
+
+const searchEstimators = async (req, res) => {
+  try {
+    const { projectName, contractCode, estimatorName } = req.query;
+    if (!req.user || !req.user._id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized. User ID is required." });
+    }
+    const filter = {
+      userId: req.user._id,
+      $or: [],
+    };
+    if (projectName) {
+      filter.$or.push({
+        "projectName.projectName": { $regex: projectName, $options: "i" },
+      });
+    }
+    if (contractCode) {
+      filter.$or.push({
+        "contract.code": { $regex: contractCode, $options: "i" },
+      });
+    }
+
+    if (estimatorName) {
+      filter.$or.push({
+        name: { $regex: estimatorName, $options: "i" },
+      });
+    }
+    const estimators = await estimatorModel
+      .find(filter)
+      .populate({
+        path: "projectName",
+        select: "projectName",
+      })
+      .populate({
+        path: "contract",
+        select: "code name",
+      });
+    return res.status(200).json(estimators);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createEstimator,
   getAllEstimator,
   getTotalFromMaterial,
+  getRiskFactorByEstimatorId,
   deleteEstimator,
   getSingleEstimator,
+  searchEstimators,
 };
