@@ -69,6 +69,9 @@ const addMaterial = async (req, res) => {
         });
       }
     }
+    const existingMaterial = await Material.findOne({ category,estimatorId });
+    const includeTax = existingMaterial?.includeTax === true;
+    const showSales = existingMaterial?.showSales === true;
     const total = quantity * cost;
     const newMaterial = new Material({
       estimatorId,
@@ -83,6 +86,8 @@ const addMaterial = async (req, res) => {
       quantity,
       cost,
       total,
+      includeTax,
+      showSales,
     });
 
     await newMaterial.save();
@@ -205,13 +210,6 @@ const calculateSalesAndTax = async (req, res) => {
       category: category,
       estimatorId: estimatorId,
     });
-
-    if (!materials.length) {
-      return res
-        .status(404)
-        .json({ message: "No materials found for the given criteria." });
-    }
-
     // تجهيز عمليات التحديث
     const bulkOperations = materials.map((material) => {
       const updates = {};
