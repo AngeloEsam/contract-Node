@@ -271,7 +271,14 @@ const getShowSalesAndIncludeTaxByEstimatorId = async (req, res) => {
         category: category,
       })
       .select("includeTax showSales taxValue profitMargin");
-    return res.status(200).json({ data: findMaterial });
+     const defaultMaterial = {
+      includeTax: false,
+      showSales: false,
+      taxValue: 0,
+      profitMargin: 0,
+    };
+
+    return res.status(200).json({ data: findMaterial || defaultMaterial });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
