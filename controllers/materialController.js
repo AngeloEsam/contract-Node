@@ -268,74 +268,6 @@ const calculateSalesAndTax = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
-// const calculateSalesAndTax = async (req, res) => {
-//   try {
-//     const { estimatorId } = req.params;
-//     const { showSales, includeTax, taxValue, profitMargin, category } =
-//       req.body;
-
-//     if (typeof showSales !== "boolean" || typeof includeTax !== "boolean") {
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid or missing showSales/includeTax" });
-//     }
-//     if (showSales && (isNaN(profitMargin) || profitMargin < 0)) {
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid or missing profitMargin" });
-//     }
-//     if (includeTax && (isNaN(taxValue) || taxValue < 0)) {
-//       return res.status(400).json({ message: "Invalid or missing taxValue" });
-//     }
-//     const materials = await Material.find({
-//       category: category,
-//       estimatorId: estimatorId,
-//     });
-
-//     const updatedMaterials = materials.map(async (material) => {
-//       const updatedMaterial = { ...material._doc };
-
-//       if (showSales && profitMargin > 0) {
-//         const profitValue =
-//           material.total + (material.total * profitMargin) / 100;
-//         updatedMaterial.profitValue = profitValue;
-//       }
-//       if (includeTax && taxValue > 0) {
-//         const taxDeductedValue =
-//           material.total - (material.total * taxValue) / 100;
-//         updatedMaterial.taxDeductedValue = taxDeductedValue;
-//       }
-
-//       await Material.updateOne(
-//         { _id: material._id },
-//         {
-//           $set: {
-//             showSales,
-//             includeTax,
-//             // profitMargin: profitMargin || material.profitMargin,
-//             // taxValue: taxValue || material.taxValue,
-//             profitMargin: profitMargin,
-//             taxValue: taxValue,
-//             profitValue: updatedMaterial.profitValue || material.profitValue,
-//             taxDeductedValue:
-//               updatedMaterial.taxDeductedValue || material.taxDeductedValue,
-//           },
-//         },
-//         { new: true }
-//       );
-//       return updatedMaterial;
-//     });
-//     const results = await Promise.all(updatedMaterials);
-//     return res.status(200).json({
-//       message: "Calculation applied and data updated successfully.",
-//       data: results,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: error.message });
-//   }
-// };
 const getAllByCategory = async (req, res) => {
   try {
     const { category, estimatorId } = req.params;
@@ -343,6 +275,8 @@ const getAllByCategory = async (req, res) => {
     if (!validCategories.includes(category)) {
       return res.status(400).json({ message: "Invalid category provided." });
     }
+
+    // جلب البيانات الأساسية
     const materials = await Material.find({
       category,
       userId: req.user._id,
@@ -353,7 +287,22 @@ const getAllByCategory = async (req, res) => {
       .populate("boqLineItem", "workItemName")
       .populate("estimatorId", "name");
 
-    res.status(200).json({ data: materials });
+    // التحقق من materialName
+    const updatedMaterials = await Promise.all(
+      materials.map(async (material) => {
+        if (mongoose.Types.ObjectId.isValid(material.materialName)) {
+          // إذا كانت materialName عبارة عن ObjectId، قم بعمل populate
+          const populatedMaterial = await Material.findById(
+            material._id
+          ).populate("materialName", "name");
+          return populatedMaterial;
+        }
+        // إذا لم تكن ObjectId، أعد المادة كما هي
+        return material;
+      })
+    );
+
+    res.status(200).json({ data: updatedMaterials });
   } catch (error) {
     console.error("Error fetching materials by category:", error);
     res
