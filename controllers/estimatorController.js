@@ -102,10 +102,17 @@ const getRiskFactorByEstimatorId = async (req, res) => {
     const estimator = await estimatorModel
       .findOne({ _id: estimatorId, userId: req.user._id })
       .select("riskFactor");
+    const findMaterial = await materialModel
+      .findOne({ estimatorId: estimatorId, userId: req.user._id })
+      .select("includeTax showSales taxValue profitMargin");
+    if (!findMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
     if (!estimator) {
       return res.status(404).json({ message: "Estimator not found" });
     }
-    return res.status(200).json({ riskFactor: estimator });
+    return res.status(200).json({ riskFactor: estimator,findMaterial });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -263,8 +270,6 @@ const searchEstimators = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
-
 
 module.exports = {
   createEstimator,
