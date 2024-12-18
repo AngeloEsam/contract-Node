@@ -3,7 +3,7 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const { auth } = require("../middlewares/auth");
-const { createEstimator, getAllEstimator, getTotalFromMaterial, deleteEstimator, getSingleEstimator, searchEstimators, getRiskFactorByEstimatorId } = require("../controllers/estimatorController");
+const { createEstimator, getAllEstimator, getTotalFromMaterial, deleteEstimator, getSingleEstimator, searchEstimators, getRiskFactorByEstimatorId, getShowSalesAndIncludeTaxByEstimatorId } = require("../controllers/estimatorController");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../excelFiles");
@@ -25,6 +25,7 @@ router.get("/", auth, getAllEstimator);
 router.get("/search",auth, searchEstimators);
 router.get("/:estimatorId",auth, getSingleEstimator);
 router.get("/risk-factor/:estimatorId",auth, getRiskFactorByEstimatorId);
+router.get("/:category/:estimatorId",auth, getShowSalesAndIncludeTaxByEstimatorId);
 router.post("/total/:estimatorId", auth, getTotalFromMaterial);
 router.delete("/:estimatorId",auth, deleteEstimator);
 module.exports = router;
