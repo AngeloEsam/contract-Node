@@ -471,7 +471,9 @@ const insertMaterial = async (req, res) => {
     if (!esitimator) {
       return res.status(404).json({ message: "Estimator not found" });
     }
-
+    const existingMaterial = await Material.findOne({ category, estimatorId });
+    const includeTax = existingMaterial?.includeTax === true;
+    const showSales = existingMaterial?.showSales === true;
     for (const row of sheetData) {
       const product = await ProductModel.findOne({ name: row["materialName"] });
       const workItem = await workItemModel.find({
@@ -488,6 +490,8 @@ const insertMaterial = async (req, res) => {
         quantity: row["quantity"],
         cost: row["cost"],
         total,
+        includeTax,
+        showSales,
       };
       const newMaterial = new Material({
         userId,
