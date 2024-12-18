@@ -438,15 +438,85 @@ const insertMaterial = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const insertMateriall = async (req, res) => {
+  const { estimatorId } = req.params;
+  const { category, applyOn } = req.body;
+  const { _id: userId } = req.user;
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file found" });
+    }
+
+    const filePath = path.join(__dirname, "../excelFiles", req.file.filename);
+
+    const excelData = excelToJson({
+      sourceFile: filePath,
+      header: { rows: 1 },
+      columnToKey: {
+        A: "boqLineItem",
+        B: "materialName",
+        C: "unitOfMeasure",
+        D: "quantity",
+        E: "cost",
+      },
+    });
+
+    const sheetName = Object.keys(excelData)[0];
+    const sheetData = excelData[sheetName];
+    if (!sheetData || sheetData.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No data found in the Excel file" });
+    }
+    const esitimator = await estimatorModel.findById(estimatorId);
+    if (!esitimator) {
+      return res.status(404).json({ message: "Estimator not found" });
+    }
+
+    for (const row of sheetData) {
+      const product = await ProductModel.findOne({ name: row["materialName"] });
+      const workItem = await workItemModel.find({
+        workItemName: row["boqLineItem"],
+      });
+      const total = (row["quantity"] || 0) * (row["cost"] || 0);
+      const materialDetails = {
+        boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
+        applyOn: applyOn,
+        category: category,
+        materialName:
+          category == "Material" ? product._id : row["materialName"],
+        unitOfMeasure: row["unitOfMeasure"],
+        quantity: row["quantity"],
+        cost: row["cost"],
+        total,
+      };
+      const newMaterial = new Material({
+        userId,
+        estimatorId,
+        ...materialDetails,
+      });
+      await newMaterial.save();
+    }
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Error deleting file:", err);
+    });
+    res.status(201).json({ message: "Success" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
 const getAllByCategoryNames = async (req, res) => {
   try {
-    const { category } = req.params;
+    const { category,estimatorId } = req.params;
     const validCategories = ["Labor", "Equipment", "OtherCost"];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ message: "Invalid category provided." });
     }
     const materials = await Material.find({
       category,
+      estimatorId,
       userId: req.user._id,
     }).select("materialName");
 
