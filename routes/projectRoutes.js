@@ -54,12 +54,12 @@ router.get("/", auth, getUserProjects);
 router.get("/names", auth, getUserProjectNames);
 //get all projects
 router.get("/all", auth, getAllProjects);
-//get names of userGroup
-router.get("/names", auth, getUserGroupsOfNames);
 //get Project Status Summary
 router.get("/status", auth, getProjectStatusSummary);
 // search by project name or project manager or status
 router.get("/search", auth, searchProjects);
+//get names of userGroup
+router.get("/groups/names", auth, getUserGroupsOfNames);
 // get all contracts for project
 router.get("/contracts/:projectId", auth, getProjectContracts);
 //get single project
