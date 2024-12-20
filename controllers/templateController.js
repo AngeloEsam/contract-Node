@@ -15,6 +15,16 @@ const saveTemplate = async (req, res) => {
     if (!contract) {
       return res.status(404).json({ message: "Contract not found!" });
     }
+    const existingTemplate = await Template.findOne({
+      name,
+      mainId: { $all: contract.mainId },
+    });
+
+    if (existingTemplate) {
+      return res.status(400).json({
+        message: "Template with the same name and mainId already exists!",
+      });
+    }
     const newTemplate = new Template({
       name,
       description,

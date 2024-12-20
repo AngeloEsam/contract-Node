@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const templateSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     description: { type: String },
     category: { type: String },
     tags: [{ type: String }],
