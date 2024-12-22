@@ -425,7 +425,7 @@ const insertMaterial = async (req, res) => {
     const showSales = existingMaterial?.showSales === true;
     for (const row of sheetData) {
       const product = await ProductModel.findOne({ name: row["materialName"] });
-      const workItem = await workItemModel.find({
+      const workItem = await workItemModel.findOne({
         workItemName: row["boqLineItem"],
       });
       const total = (row["quantity"] || 0) * (row["cost"] || 0);
