@@ -232,11 +232,6 @@ const getSingleContract = async (req, res) => {
         },
       },
     });
-
-    if (!contract) {
-      return res.status(404).json({ message: "Contract not found" });
-    }
-
     const uniqueMainItems = new Set(
       contract.mainId.map((item) => item._id.toString())
     );

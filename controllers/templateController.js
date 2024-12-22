@@ -104,7 +104,17 @@ const getSingleTemplate = async (req, res) => {
         },
       },
     });
-    res.status(200).json({ message: "Template found", data: template });
+    const uniqueMainItems = new Set(
+      template.mainId.map((item) => item._id.toString())
+    );
+    const totalMainItems = uniqueMainItems.size;
+    res
+      .status(200)
+      .json({
+        message: "Template found",
+        data: template,
+        totalMainItems: totalMainItems,
+      });
   } catch (error) {
     res
       .status(500)
@@ -238,11 +248,14 @@ const getTemplateNames = async (req, res) => {
 };
 const getTemplateCategories = async (req, res) => {
   try {
-    const templates = await Template.find({ createdBy: req.user._id }, "category");
-      res.status(200).json({
-        message: "Template names fetched successfully",
-        data: templates,
-      });
+    const templates = await Template.find(
+      { createdBy: req.user._id },
+      "category"
+    );
+    res.status(200).json({
+      message: "Template names fetched successfully",
+      data: templates,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -261,5 +274,5 @@ module.exports = {
   updateTemplate,
   searchTemplates,
   getTemplateNames,
-  getTemplateCategories
+  getTemplateCategories,
 };
