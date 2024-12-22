@@ -68,15 +68,16 @@ const postProduct = async (req, res, next) => {
     ) {
       return next(new ApiError("All fields are required", 400));
     }
-    const findCategory = await CategoryModel.findOne({ name: category });
-    if (!findCategory) {
-      return next(new ApiError("Category not found", 404));
-    }
+    // const findCategory = await CategoryModel.findOne({ name: category });
+    // if (!findCategory) {
+    //   return next(new ApiError("Category not found", 404));
+    // }
     const product = await Product.create({
       sku,
       name,
       slug: slugify(name, { lower: true }),
-      category: findCategory._id,
+      //category: findCategory._id,
+      category,
       price,
       quantity,
       uom,
