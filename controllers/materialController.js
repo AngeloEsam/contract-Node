@@ -7,7 +7,7 @@ const excelToJson = require("convert-excel-to-json");
 const Project = require("../models/projectModel");
 const workItemModel = require("../models/workItemModel");
 const ProductModel = require("../models/productModel");
-const mongoose  = require("mongoose");
+const mongoose = require("mongoose");
 const addMaterial = async (req, res) => {
   try {
     const {
@@ -70,7 +70,7 @@ const addMaterial = async (req, res) => {
         });
       }
     }
-    const existingMaterial = await Material.findOne({ category,estimatorId });
+    const existingMaterial = await Material.findOne({ category, estimatorId });
     const includeTax = existingMaterial?.includeTax === true;
     const showSales = existingMaterial?.showSales === true;
     const total = quantity * cost;
@@ -189,7 +189,8 @@ const deleteMaterial = async (req, res) => {
 const calculateSalesAndTax = async (req, res) => {
   try {
     const { estimatorId } = req.params;
-    const { showSales, includeTax, taxValue, profitMargin, category } = req.body;
+    const { showSales, includeTax, taxValue, profitMargin, category } =
+      req.body;
 
     // التحقق من المدخلات
     if (typeof showSales !== "boolean" || typeof includeTax !== "boolean") {
@@ -251,12 +252,14 @@ const calculateSalesAndTax = async (req, res) => {
       includeTax,
       profitMargin,
       taxValue,
-      profitValue: showSales && profitMargin > 0
-        ? material.total + (material.total * profitMargin) / 100
-        : undefined,
-      taxDeductedValue: includeTax && taxValue > 0
-        ? material.total - (material.total * taxValue) / 100
-        : undefined,
+      profitValue:
+        showSales && profitMargin > 0
+          ? material.total + (material.total * profitMargin) / 100
+          : undefined,
+      taxDeductedValue:
+        includeTax && taxValue > 0
+          ? material.total - (material.total * taxValue) / 100
+          : undefined,
     }));
 
     // إرجاع النتائج
@@ -402,11 +405,11 @@ const insertMaterial = async (req, res) => {
       sourceFile: filePath,
       header: { rows: 1 },
       columnToKey: {
-        A: "boqLineItem",
-        B: "materialName",
-        C: "unitOfMeasure",
-        D: "quantity",
-        E: "cost",
+        // A: "boqLineItem",
+        A: "materialName",
+        B: "unitOfMeasure",
+        C: "quantity",
+        D: "cost",
       },
     });
 
@@ -426,12 +429,15 @@ const insertMaterial = async (req, res) => {
     const showSales = existingMaterial?.showSales === true;
     for (const row of sheetData) {
       const product = await ProductModel.findOne({ name: row["materialName"] });
-      const workItem = await workItemModel.findOne({
-        workItemName: row["boqLineItem"],
-      });
+      if (!product) {
+        res.status(404).json({ message: "Product not found" });
+      }
+      // const workItem = await workItemModel.findOne({
+      //   workItemName: row["boqLineItem"],
+      // });
       const total = (row["quantity"] || 0) * (row["cost"] || 0);
       const materialDetails = {
-        boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
+        // boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
         applyOn: applyOn,
         category: category,
         materialName:
@@ -461,7 +467,7 @@ const insertMaterial = async (req, res) => {
 };
 const getAllByCategoryNames = async (req, res) => {
   try {
-    const { category,estimatorId } = req.params;
+    const { category, estimatorId } = req.params;
     const materials = await Material.find({
       category,
       estimatorId,
