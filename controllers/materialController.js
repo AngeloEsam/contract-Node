@@ -7,6 +7,7 @@ const excelToJson = require("convert-excel-to-json");
 const Project = require("../models/projectModel");
 const workItemModel = require("../models/workItemModel");
 const ProductModel = require("../models/productModel");
+const { default: mongoose } = require("mongoose");
 const addMaterial = async (req, res) => {
   try {
     const {

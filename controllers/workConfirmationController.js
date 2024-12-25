@@ -100,6 +100,8 @@ const getAllWorkConfirmation = async (req, res) => {
         path: "contractId",
         select: "code",
       })
+      .populate("projectName", "projectName")
+      .populate("partner", " partnerName ")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -126,7 +128,6 @@ const getAllWorkConfirmation = async (req, res) => {
   }
 };
 
-
 const getSingleWorkConfirmation = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
@@ -148,7 +149,9 @@ const getSingleWorkConfirmation = async (req, res) => {
           path: "workItemId",
           select: "workDetails workItemName _id",
         },
-      });
+      })
+      .populate("projectName", "projectName")
+      .populate("partner", "partnerName ");
     if (!workConfirmation) {
       return res
         .status(404)
@@ -412,13 +415,14 @@ const searchByWorkItemName = async (req, res) => {
         message: "Unauthorized. Please log in to perform this action.",
       });
     }
+    const userId = req.user._id; 
     const { workItemName } = req.query;
     if (!workItemName) {
       return res
         .status(400)
         .json({ message: "Please provide a workItemName to search for." });
     }
-    const results = await WorkConfirmation.find()
+    const results = await WorkConfirmation.find({userId})
       .populate({
         path: "workItems.workItemId",
         match: { workItemName: { $regex: workItemName, $options: "i" } },
@@ -442,6 +446,246 @@ const searchByWorkItemName = async (req, res) => {
   }
 };
 
+const searchWorkConfirmation = async (req, res) => {
+  try {
+    const { projectName, partnerName, status, contractId } = req.query;
+    const userId = req.user._id;
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "projects",
+          localField: "projectName",
+          foreignField: "_id",
+          as: "projectName",
+        },
+      },
+      {
+        $lookup: {
+          from: "partners",
+          localField: "partner",
+          foreignField: "_id",
+          as: "partner",
+        },
+      },
+      {
+        $lookup: {
+          from: "contracts",
+          localField: "contractId",
+          foreignField: "_id",
+          as: "contractId",
+        },
+      },
+      {
+        $unwind: {
+          path: "$contractId",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$projectName",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$partner",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          partner: {
+            _id: 1,
+            partnerName: 1,
+          },
+          projectName: {
+            _id: 1,
+            projectName: 1,
+          },
+          withContract: 1,
+          numberWithSpecificContract: 1,
+          contractId: {
+            _id: 1,
+            code: 1,
+          },
+          userId: 1,
+          contractType: 1,
+          startDate: 1,
+          endDate: 1,
+          workConfirmationType: 1,
+          typeOfProgress: 1,
+          status: 1,
+          activateInvoicingByPercentage: 1,
+          completionPercentage: 1,
+          workItems: 1,
+          totalAmount: 1,
+          dueAmount: 1,
+          totalDeduction: 1,
+          totalAddition: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ];
+
+    const orConditions = [{ userId: userId }];
+
+    if (projectName) {
+      orConditions.push({
+        "projectName.projectName": { $regex: projectName, $options: "i" },
+      });
+    }
+
+    if (partnerName) {
+      orConditions.push({
+        "partner.partnerName": { $regex: partnerName, $options: "i" },
+      });
+    }
+
+    if (contractId) {
+      orConditions.push({
+        "contractId.code": { $regex: contractId, $options: "i" },
+      });
+    }
+
+    if (status) {
+      orConditions.push({
+        status: { $regex: status, $options: "i" },
+      });
+    }
+    if (orConditions.length > 0) {
+      pipeline.push({
+        $match: {
+          $or: orConditions,
+        },
+      });
+    }
+
+    const results = await WorkConfirmation.aggregate(pipeline);
+
+    res.status(200).json({ data: results });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+// const searchWorkConfirmation = async (req, res) => {
+//   try {
+//     const { projectName, partnerName, status, contractId } = req.query;
+//     const userId = req.user._id;  // الحصول على الـ userId من الـ req.user
+
+//     const pipeline = [
+//       {
+//         $lookup: {
+//           from: "projects",
+//           localField: "projectName",
+//           foreignField: "_id",
+//           as: "projectName",
+//         },
+//       },
+//       {
+//         $lookup: {
+//           from: "partners",
+//           localField: "partner",
+//           foreignField: "_id",
+//           as: "partner",
+//         },
+//       },
+//       {
+//         $lookup: {
+//           from: "contracts",
+//           localField: "contractId",
+//           foreignField: "_id",
+//           as: "contractId",
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$contractId",
+//           preserveNullAndEmptyArrays: true,
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$projectName",
+//           preserveNullAndEmptyArrays: true,
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$partner",
+//           preserveNullAndEmptyArrays: true,
+//         },
+//       },
+//       {
+//         $project: {
+//           partner: {
+//             _id: 1,
+//             partnerName: 1,
+//           },
+//           projectName: {
+//             _id: 1,
+//             projectName: 1,
+//           },
+//           withContract: 1,
+//           numberWithSpecificContract: 1,
+//           contractId: {
+//             _id: 1,
+//             code: 1,
+//           },
+//           userId: 1,
+//           contractType: 1,
+//           startDate: 1,
+//           endDate: 1,
+//           workConfirmationType: 1,
+//           typeOfProgress: 1,
+//           status: 1,
+//           activateInvoicingByPercentage: 1,
+//           completionPercentage: 1,
+//           workItems: 1,
+//           totalAmount: 1,
+//           dueAmount: 1,
+//           totalDeduction: 1,
+//           totalAddition: 1,
+//           createdAt: 1,
+//           updatedAt: 1,
+//         },
+//       },
+//     ];
+
+//     const matchConditions = {
+//       userId: userId,
+//     };
+
+//     if (projectName) {
+//       matchConditions["projectName.projectName"] = { $regex: projectName, $options: "i" };
+//     }
+
+//     if (partnerName) {
+//       matchConditions["partner.partnerName"] = { $regex: partnerName, $options: "i" };
+//     }
+
+//     if (contractId) {
+//       matchConditions["contractId.code"] = { $regex: contractId, $options: "i" };
+//     }
+
+//     if (status) {
+//       matchConditions["status"] = { $regex: status, $options: "i" };
+//     }
+
+//     pipeline.push({
+//       $match: matchConditions,
+//     });
+
+//     const results = await WorkConfirmation.aggregate(pipeline);
+
+//     res.status(200).json({ data: results });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 module.exports = {
   createWorkConfirmation,
   getAllWorkConfirmation,
@@ -450,4 +694,5 @@ module.exports = {
   updateWorkConfirmation,
   updateWorkConfirmationBaseOnWorkItem,
   searchByWorkItemName,
+  searchWorkConfirmation,
 };
