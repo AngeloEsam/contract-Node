@@ -8,6 +8,7 @@ const additionModel = require("../models/additionModel");
 const deductionModel = require("../models/deductionModel");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
+const materialModel = require("../models/materialModel");
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -60,15 +61,16 @@ const addWorkDetailsItem = async (req, res) => {
 };
 const getAllWorkItems = async (req, res) => {
   try {
+    const userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-    const workItems = await WorkItem.find()
+    const workItems = await WorkItem.find({ userId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate("workDetails");
-    const totalItems = await WorkItem.countDocuments();
+    const totalItems = await WorkItem.countDocuments({ userId });
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -79,8 +81,7 @@ const getAllWorkItems = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error retrieving Work Items",
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -212,23 +213,35 @@ const updateWorkItem = async (req, res) => {
 const deleteWork = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedWorkItem = await WorkItem.findByIdAndDelete(id);
-
-    if (!deletedWorkItem) {
+    const userId = req.user._id;
+    const workItem = await WorkItem.findById(id);
+    if (!workItem) {
       return res.status(404).json({ message: "Work Item not found" });
     }
+    if (
+      req.user.role !== "admin" &&
+      workItem.userId.toString() !== userId.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this Work Item" });
+    }
+    await workConfirmationModel.updateMany(
+      { "workItems.workItemId": id },
+      { $pull: { workItems: { workItemId: id } } }
+    );
+    await materialModel.deleteMany({ boqLineItem: id });
+    await WorkItem.findByIdAndDelete(id);
 
     res.status(200).json({
       message: "Work Item deleted successfully!",
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error deleting Work Item",
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 const insertSheet = async (req, res) => {
   const { contractId } = req.params;
   const { _id: userId } = req.user;
@@ -489,7 +502,9 @@ const getWorkItemsNameForContract = async (req, res) => {
         });
       });
     });
-    const workItemsss = await WorkItem.find({ _id: { $in: workItemss } }).select('workItemName _id');
+    const workItemsss = await WorkItem.find({
+      _id: { $in: workItemss },
+    }).select("workItemName _id");
     res.status(201).json({ data: workItemsss });
   } catch (e) {
     return res.status(400).json({ message: e.message });
@@ -505,7 +520,7 @@ module.exports = {
   insertSheet,
   addSingleBoq,
   getWorkItemsForContract,
-  getWorkItemsNameForContract
+  getWorkItemsNameForContract,
 };
 
 // const deleteBoq = async (req, res) => {

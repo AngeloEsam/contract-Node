@@ -111,8 +111,7 @@ const deleteMain = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error deleting Main Item",
-      error: error.message,
+      message:error.message,
     });
   }
 };

@@ -31,15 +31,16 @@ const addSubItem = async (req, res) => {
 };
 const getAllSubItems = async (req, res) => {
   try {
+    const userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const subItems = await SubItem.find()
+    const subItems = await SubItem.find({ userId })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
       .populate("workItems");
-    const totalItems = await SubItem.countDocuments();
+    const totalItems = await SubItem.countDocuments({ userId });
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -77,22 +78,33 @@ const getSingleSubItem = async (req, res) => {
 const updateSubItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedSubItem = await SubItem.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-
-    if (!updatedSubItem) {
+    const userId = req.user._id;
+    const { subItemName } = req.body;
+    const subItem = await SubItem.findById(id);
+    if (!subItem) {
       return res.status(404).json({ message: "Sub Item not found" });
     }
+    if (
+      req.user.role !== "admin" &&
+      subItem.userId.toString() !== userId.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to update this Sub Item" });
+    }
+    const updatedSubItem = await SubItem.findByIdAndUpdate(
+      id,
+      { subItemName },
+      { new: true }
+    );
 
     res.status(200).json({
       message: "Sub Item updated successfully!",
-      data: updateSubItem,
+      data: updatedSubItem,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error updating Sub Item",
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -100,14 +112,32 @@ const updateSubItem = async (req, res) => {
 const deleteSub = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedSubItem = await SubItem.findByIdAndDelete(id);
-
-    if (!deletedSubItem) {
+    const userId = req.user._id;
+    const subItem = await SubItem.findById(id).populate("workItems");
+    if (!subItem) {
       return res.status(404).json({ message: "Sub Item not found" });
     }
+    if (
+      req.user.role !== "admin" &&
+      subItem.userId.toString() !== userId.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this Sub Item" });
+    }
+    const workItemIds = subItem.workItems.map((workItem) => workItem._id);
+    if (workItemIds.length > 0) {
+      await workConfirmationModel.updateMany(
+        { "workItems.workItemId": { $in: workItemIds } },
+        { $pull: { workItems: { workItemId: { $in: workItemIds } } } }
+      );
+      await materialModel.deleteMany({ boqLineItem: { $in: workItemIds } });
+      await WorkItem.deleteMany({ _id: { $in: workItemIds } });
+    }
+    await SubItem.findByIdAndDelete(id);
 
     res.status(200).json({
-      message: "Sub Item deleted successfully!",
+      message: "Sub Item and its associated Work Items deleted successfully!",
     });
   } catch (error) {
     res.status(500).json({
@@ -117,12 +147,10 @@ const deleteSub = async (req, res) => {
   }
 };
 
-
 module.exports = {
   addSubItem,
   getAllSubItems,
   getSingleSubItem,
   updateSubItem,
   deleteSub,
-  
 };

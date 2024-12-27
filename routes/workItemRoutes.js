@@ -34,13 +34,13 @@ const router = express.Router();
 router.post("/boq/:contractId", auth, addSingleBoq);
 router.post("/:userId", addWorkDetailsItem);
 router.post("/sheet/:contractId", auth, upload.single("file"), insertSheet);
-router.get("/", getAllWorkItems);
+router.get("/",auth, getAllWorkItems);
 router.get("/:contractId", auth, getWorkItemsForContract);
 router.get("/names/:contractId", auth, getWorkItemsNameForContract);
 router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
-router.delete("/:id", deleteWork);
+router.delete("/:id",auth, deleteWork);
 //router.delete("/boq/:contractId/:mainItemId", auth, deleteBoq);
 
 module.exports = router;
