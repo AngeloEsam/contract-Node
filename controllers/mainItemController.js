@@ -1,6 +1,8 @@
 const Contract = require("../models/contractModel");
 const MainItem = require("../models/mainItemModel");
+const materialModel = require("../models/materialModel");
 const subItemModel = require("../models/subItemModel");
+const workConfirmationModel = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
 const mongoose = require("mongoose");
 const addMainItem = async (req, res) => {
@@ -98,20 +100,48 @@ const updateMainItem = async (req, res) => {
 };
 
 const deleteMain = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
-    const deletedBOQItem = await MainItem.findByIdAndDelete(id);
-
-    if (!deletedBOQItem) {
+    const mainItem = await MainItem.findById(id)
+      .populate("subItems")
+      .session(session);
+    if (!mainItem) {
       return res.status(404).json({ message: "Main Item not found" });
     }
-
+    for (const subItem of mainItem.subItems) {
+      await workItemModel
+        .deleteMany({ _id: { $in: subItem.workItems } })
+        .session(session);
+      await materialModel
+        .updateMany(
+          { boqLineItem: { $in: subItem.workItems } },
+          { $unset: { boqLineItem: "" } }
+        )
+        .session(session);
+      await workConfirmationModel
+        .updateMany(
+          { "workItems.workItemId": { $in: subItem.workItems } },
+          { $pull: { workItems: { workItemId: { $in: subItem.workItems } } } }
+        )
+        .session(session);
+    }
+    await subItemModel
+      .deleteMany({ _id: { $in: mainItem.subItems } })
+      .session(session);
+    await MainItem.findByIdAndDelete(id).session(session);
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).json({
-      message: "Main Item deleted successfully!",
+      message: "Main Item and all related data deleted successfully!",
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
     res.status(500).json({
-      message:error.message,
+      message: error.message,
     });
   }
 };
