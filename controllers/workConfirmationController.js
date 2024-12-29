@@ -410,6 +410,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
 
 const searchByWorkItemName = async (req, res) => {
   try {
+    const { workConfirmationId } = req.params;
     if (!req.user) {
       return res.status(401).json({
         message: "Unauthorized. Please log in to perform this action.",
@@ -426,9 +427,10 @@ const searchByWorkItemName = async (req, res) => {
     }
 
     const skip = (page - 1) * limit;
-
-    // البحث عن وثيقة واحدة تحتوي على الـ workItem المطلوب
-    const workConfirmation = await WorkConfirmation.findOne({ userId })
+    const workConfirmation = await WorkConfirmation.findOne({
+      userId: userId,
+      _id: workConfirmationId,
+    })
       .populate("contractId", "code")
       .populate("projectName", "projectName")
       .populate("partner", "partnerName")
@@ -440,14 +442,15 @@ const searchByWorkItemName = async (req, res) => {
 
     if (!workConfirmation) {
       return res.status(404).json({
-        message: "No work confirmation found containing the specified work item.",
+        message:
+          "No work confirmation found containing the specified work item.",
       });
     }
 
     const totalItems = workConfirmation.workItems.length;
 
     const workItems = workConfirmation.workItems
-      .filter((item) => item.workItemId) // تجاهل العناصر غير الموجودة
+      .filter((item) => item.workItemId)
       .map((item) => {
         const { workItemId } = item;
 
@@ -495,7 +498,6 @@ const searchByWorkItemName = async (req, res) => {
       .json({ message: "An error occurred while searching.", error });
   }
 };
-
 
 const searchWorkConfirmation = async (req, res) => {
   try {

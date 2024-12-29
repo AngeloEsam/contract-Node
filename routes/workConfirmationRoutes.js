@@ -14,7 +14,7 @@ const { auth } = require("../middlewares/auth");
 
 router.post("/create", auth, createWorkConfirmation);
 router.get("/", auth, getAllWorkConfirmation);
-router.get("/search", auth, searchByWorkItemName);
+router.get("/search/:workConfirmationId", auth, searchByWorkItemName);
 router.get("/search/find", auth, searchWorkConfirmation);
 router.get("/:id", auth, getSingleWorkConfirmation);
 router.delete("/:id", auth, deleteWorkConfirmation);
