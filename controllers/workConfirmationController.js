@@ -408,6 +408,43 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
   }
 };
 
+// const searchByWorkItemName = async (req, res) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(401).json({
+//         message: "Unauthorized. Please log in to perform this action.",
+//       });
+//     }
+//     const userId = req.user._id;
+//     const { workItemName } = req.query;
+//     if (!workItemName) {
+//       return res
+//         .status(400)
+//         .json({ message: "Please provide a workItemName to search for." });
+//     }
+//     const results = await WorkConfirmation.find({ userId })
+//       .populate({
+//         path: "workItems.workItemId",
+//         match: { workItemName: { $regex: workItemName, $options: "i" } },
+//         select: "workItemName",
+//       })
+//       .exec();
+
+//     const filteredWorkItems = results.flatMap((confirmation) =>
+//       confirmation.workItems
+//         .filter((item) => item.workItemId)
+//         .map((item) => ({
+//           ...item._doc,
+//           workItemName: item.workItemId.workItemName,
+//         }))
+//     );
+
+//     res.status(200).json({ data: filteredWorkItems });
+//   } catch (error) {
+//     console.error("Error fetching work items with names:", error);
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 const searchByWorkItemName = async (req, res) => {
   try {
     if (!req.user) {
@@ -415,35 +452,112 @@ const searchByWorkItemName = async (req, res) => {
         message: "Unauthorized. Please log in to perform this action.",
       });
     }
-    const userId = req.user._id; 
+    const userId = req.user._id;
     const { workItemName } = req.query;
     if (!workItemName) {
       return res
         .status(400)
         .json({ message: "Please provide a workItemName to search for." });
     }
-    const results = await WorkConfirmation.find({userId})
+
+    const results = await WorkConfirmation.find({ userId })
       .populate({
         path: "workItems.workItemId",
         match: { workItemName: { $regex: workItemName, $options: "i" } },
-        select: "workItemName",
+        select: "workItemName workDetails",
       })
+      .populate("contractId", "code")
+      .populate("projectName", "projectName")
+      .populate("partner", "partnerName")
       .exec();
 
-    const filteredWorkItems = results.flatMap((confirmation) =>
-      confirmation.workItems
-        .filter((item) => item.workItemId)
-        .map((item) => ({
-          ...item._doc,
-          workItemName: item.workItemId.workItemName,
-        }))
-    );
+    const filteredResults = results.map((confirmation) => {
+      const filteredWorkItems = confirmation.workItems.filter(
+        (item) => item.workItemId
+      );
 
-    res.status(200).json({ data: filteredWorkItems });
+      return {
+        ...confirmation._doc,
+        workItems: filteredWorkItems,
+      };
+    });
+
+    res.status(200).json({
+      data: filteredResults,
+      pagination: {
+        totalItems: filteredResults.length,
+        currentPage: 1, // يمكن تعديله حسب طلبك
+        totalPages: 1, // يمكن حسابه حسب limit
+        limit: 10, // يمكن تغييره حسب الطلب
+      },
+    });
   } catch (error) {
     console.error("Error fetching work items with names:", error);
     return res.status(500).json({ message: error.message });
   }
+};
+
+// const searchByWorkItemName = async (req, res) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(401).json({
+//         message: "Unauthorized. Please log in to perform this action.",
+//       });
+//     }
+
+//     const userId = req.user._id;
+//     const { workItemName, page = 1, limit = 10 } = req.query;
+//     if (!workItemName) {
+//       return res
+//         .status(400)
+//         .json({ message: "Please provide a workItemName to search for." });
+//     }
+//     const skip = (page - 1) * limit;
+//     const results = await WorkConfirmation.find({ userId })
+//       .populate("contractId", "code")
+//       .populate("projectName", "projectName")
+//       .populate("partner", "partnerName")
+//       .populate({
+//         path: "workItems.workItemId",
+//         match: { workItemName: { $regex: workItemName, $options: "i" } },
+//         populate: {
+//           path: "workDetails",
+//           select: "unitOfMeasure assignedQuantity price",
+//         },
+//         select: "workItemName",
+//       })
+//       .skip(skip)
+//       .limit(parseInt(limit))
+//       .exec();
+//     const filteredResults = results.map((confirmation) => ({
+//       ...confirmation._doc,
+//       workItems: confirmation.workItems
+//         .filter((item) => item.workItemId)
+//         .map((item) => ({
+//           ...item._doc,
+//           workItemName: item.workItemId.workItemName,
+//           workDetails: item.workItemId.workDetails,
+//         })),
+//     }));
+//     const totalItems = await WorkConfirmation.countDocuments({ userId });
+
+//     res.status(200).json({
+//       data: filteredResults,
+//       pagination: {
+//         totalItems,
+//         currentPage: parseInt(page),
+//         totalPages: Math.ceil(totalItems / limit),
+//         limit: parseInt(limit),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching work confirmations:", error);
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
+
+module.exports = {
+  searchByWorkItemName,
 };
 
 const searchWorkConfirmation = async (req, res) => {
