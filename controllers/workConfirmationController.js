@@ -141,7 +141,7 @@ const getSingleWorkConfirmation = async (req, res) => {
     })
       .populate({
         path: "contractId",
-        select: "code",
+        select: "code totalContractValue",
       })
       .populate({
         path: "workItems",
@@ -387,12 +387,6 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     existingWorkConfirmation.workItems[workItemIndex].isCalculated = true;
     existingWorkConfirmation.totalAmount += totalAmount;
     existingWorkConfirmation.dueAmount += calculatedDueAmount;
-    // Debugging: Log the updated work items
-    console.log(
-      "Updated work items:",
-      JSON.stringify(existingWorkConfirmation.workItems, null, 2)
-    );
-
     // Save the updated Work Confirmation
     await existingWorkConfirmation.save();
 
