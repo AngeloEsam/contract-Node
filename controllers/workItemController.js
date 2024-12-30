@@ -163,6 +163,10 @@ const updateWorkItem = async (req, res) => {
   try {
     const { id } = req.params;
     const data = await WorkItem.findById(id);
+    if (!data) {
+      return res.status(404).json({ message: "Work Item not found" });
+    }
+
     const {
       unitOfMeasure,
       assignedQuantity,
@@ -172,21 +176,23 @@ const updateWorkItem = async (req, res) => {
       price,
       workItemName,
     } = req.body;
+    const newAssignedQuantity = assignedQuantity || data.workDetails.assignedQuantity;
+    const newPrice = price || data.workDetails.price;
+
+    const total = newAssignedQuantity && newPrice ? newAssignedQuantity * newPrice : data.workDetails.total;
+
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
       {
         workItemName,
         workDetails: {
           unitOfMeasure: unitOfMeasure || data.workDetails.unitOfMeasure,
-          assignedQuantity:
-            assignedQuantity || data.workDetails.assignedQuantity,
-          previousQuantity:
-            previousQuantity || data.workDetails.previousQuantity,
-          remainingQuantity:
-            remainingQuantity || data.workDetails.remainingQuantity,
-          financialCategory:
-            financialCategory || data.workDetails.financialCategory,
-          price: price || data.workDetails.price,
+          assignedQuantity: newAssignedQuantity,
+          previousQuantity: previousQuantity || data.workDetails.previousQuantity,
+          remainingQuantity: remainingQuantity || data.workDetails.remainingQuantity,
+          financialCategory: financialCategory || data.workDetails.financialCategory,
+          price: newPrice,
+          total, 
         },
       },
       {
@@ -209,6 +215,7 @@ const updateWorkItem = async (req, res) => {
     });
   }
 };
+
 
 const deleteWork = async (req, res) => {
   try {
