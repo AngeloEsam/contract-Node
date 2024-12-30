@@ -219,7 +219,7 @@ const deleteContract = async (req, res) => {
 const getSingleContract = async (req, res) => {
   try {
     const { contractId } = req.params;
-
+    console.log(contractId);
     if (!contractId) {
       return res.status(400).json({ message: "Contract ID is required" });
     }
@@ -235,6 +235,9 @@ const getSingleContract = async (req, res) => {
         },
       },
     });
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
     const uniqueMainItems = new Set(
       contract.mainId.map((item) => item._id.toString())
     );

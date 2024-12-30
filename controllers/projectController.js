@@ -1,6 +1,12 @@
+const mongoose = require("mongoose");
 const Contract = require("../models/contractModel");
+const mainItemModel = require("../models/mainItemModel");
+const materialModel = require("../models/materialModel");
 const Project = require("../models/projectModel");
+const subItemModel = require("../models/subItemModel");
 const User = require("../models/userModel");
+const workConfirmationModel = require("../models/workConfirmationModel");
+const workItemModel = require("../models/workItemModel");
 
 const createProject = async (req, res) => {
   try {
@@ -134,33 +140,97 @@ const getAllProjects = async (req, res) => {
   }
 };
 
+// const deleteProject = async (req, res) => {
+//   const { projectId } = req.params;
+//   const { _id } = req.user;
+
+//   try {
+//     const project = await Project.findOneAndDelete({
+//       _id: projectId,
+//       userId: _id,
+//     });
+
+//     if (!project) {
+//       return res.status(404).json({
+//         message: "Project not found or you're not authorized to delete it",
+//       });
+//     }
+
+//     res.status(200).json({
+//       message: "Project deleted successfully",
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error deleting project",
+//       error: error.message,
+//     });
+//   }
+// };
 const deleteProject = async (req, res) => {
   const { projectId } = req.params;
-  const { _id } = req.user;
-
+  const { _id: userId } = req.user;
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const project = await Project.findOneAndDelete({
       _id: projectId,
-      userId: _id,
-    });
+      userId,
+    }).session(session);
 
     if (!project) {
       return res.status(404).json({
         message: "Project not found or you're not authorized to delete it",
       });
     }
+    const contracts = await Contract.find({ project: projectId }).session(
+      session
+    );
+    const contractIds = contracts.map((contract) => contract._id);
+
+    await Contract.deleteMany({ project: projectId }).session(session);
+
+    const mains = await mainItemModel
+      .find({ project: projectId })
+      .session(session);
+    const mainIds = mains.map((main) => main._id);
+
+    const subs = await subItemModel
+      .find({ mainId: { $in: mainIds } })
+      .session(session);
+    const subIds = subs.map((sub) => sub._id);
+
+    const works = await workItemModel
+      .find({ subItemId: { $in: subIds } })
+      .session(session);
+    const workIds = works.map((work) => work._id);
+
+    await mainItemModel.deleteMany({ _id: { $in: mainIds } }).session(session);
+    await subItemModel.deleteMany({ _id: { $in: subIds } }).session(session);
+    await workItemModel.deleteMany({ _id: { $in: workIds } }).session(session);
+    await materialModel
+      .deleteMany({ boqLineItem: { $in: workIds } })
+      .session(session);
+    await workConfirmationModel
+      .updateMany(
+        { "workItems.workItemId": { $in: workIds } },
+        { $pull: { workItems: { workItemId: { $in: workIds } } } }
+      )
+      .session(session);
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
-      message: "Project deleted successfully",
+      message: "Project and all related data deleted successfully",
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
-      message: "Error deleting project",
+      message: "Error deleting project and related data",
       error: error.message,
     });
   }
 };
-
 const getSingleProject = async (req, res) => {
   const { projectId } = req.params;
   const { _id } = req.user;
@@ -401,7 +471,7 @@ const getUserProjectNames = async (req, res) => {
       "projectName _id"
     );
     // const projectNames = projects.map((project) => project.projectName);
-    return res.status(200).json({ data:projects });
+    return res.status(200).json({ data: projects });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -419,5 +489,5 @@ module.exports = {
   searchProjects,
   duplicateProject,
   getProjectContracts,
-  getUserProjectNames
+  getUserProjectNames,
 };
