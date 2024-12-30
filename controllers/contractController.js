@@ -115,6 +115,7 @@ const getUserContracts = async (req, res) => {
         populate: [
           { path: "project", select: "_id projectName" },
           { path: "partner", select: "_id partnerName" },
+          { path: "consultant", select: "_id partnerName" },
         ],
       });
       totalContracts = await User.findById(userId)
@@ -132,6 +133,7 @@ const getUserContracts = async (req, res) => {
         populate: [
           { path: "project", select: "_id projectName" },
           { path: "partner", select: "_id partnerName" },
+          { path: "consultant", select: "_id partnerName" },
         ],
       });
       totalContracts = await User.findById(parentUser._id)
