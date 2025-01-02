@@ -405,7 +405,6 @@ const insertMaterial = async (req, res) => {
       sourceFile: filePath,
       header: { rows: 1 },
       columnToKey: {
-        // A: "boqLineItem",
         A: "materialName",
         B: "unitOfMeasure",
         C: "quantity",
@@ -416,32 +415,30 @@ const insertMaterial = async (req, res) => {
     const sheetName = Object.keys(excelData)[0];
     const sheetData = excelData[sheetName];
     if (!sheetData || sheetData.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No data found in the Excel file" });
+      return res.status(400).json({ message: "No data found in the Excel file" });
     }
-    const esitimator = await estimatorModel.findById(estimatorId);
-    if (!esitimator) {
+
+    const estimator = await estimatorModel.findById(estimatorId);
+    if (!estimator) {
       return res.status(404).json({ message: "Estimator not found" });
     }
+
     const existingMaterial = await Material.findOne({ category, estimatorId });
     const includeTax = existingMaterial?.includeTax === true;
     const showSales = existingMaterial?.showSales === true;
-    for (const row of sheetData) {
+
+    const materialPromises = sheetData.map(async (row) => {
       const product = await ProductModel.findOne({ name: row["materialName"] });
       if (!product) {
-        res.status(404).json({ message: "Product not found" });
+        throw new Error(`Product not found for name: ${row["materialName"]}`);
       }
-      // const workItem = await workItemModel.findOne({
-      //   workItemName: row["boqLineItem"],
-      // });
+
       const total = (row["quantity"] || 0) * (row["cost"] || 0);
+
       const materialDetails = {
-        // boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
-        applyOn: applyOn,
-        category: category,
-        materialName:
-          category == "Material" ? product._id : row["materialName"],
+        applyOn,
+        category,
+        materialName: category === "Material" ? product._id : row["materialName"],
         unitOfMeasure: row["unitOfMeasure"],
         quantity: row["quantity"],
         cost: row["cost"],
@@ -449,22 +446,103 @@ const insertMaterial = async (req, res) => {
         includeTax,
         showSales,
       };
+
       const newMaterial = new Material({
         userId,
         estimatorId,
         ...materialDetails,
       });
-      await newMaterial.save();
-    }
+
+      return newMaterial.save();
+    });
+
+    await Promise.all(materialPromises);
+
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting file:", err);
     });
-    res.status(201).json({ message: "Success" });
+
+    res.status(201).json({ message: "Materials inserted successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
+
+// const insertMaterial = async (req, res) => {
+//   const { estimatorId } = req.params;
+//   const { category, applyOn } = req.body;
+//   const { _id: userId } = req.user;
+
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ message: "No file found" });
+//     }
+
+//     const filePath = path.join(__dirname, "../excelFiles", req.file.filename);
+
+//     const excelData = excelToJson({
+//       sourceFile: filePath,
+//       header: { rows: 1 },
+//       columnToKey: {
+//         // A: "boqLineItem",
+//         A: "materialName",
+//         B: "unitOfMeasure",
+//         C: "quantity",
+//         D: "cost",
+//       },
+//     });
+
+//     const sheetName = Object.keys(excelData)[0];
+//     const sheetData = excelData[sheetName];
+//     if (!sheetData || sheetData.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ message: "No data found in the Excel file" });
+//     }
+//     const esitimator = await estimatorModel.findById(estimatorId);
+//     if (!esitimator) {
+//       return res.status(404).json({ message: "Estimator not found" });
+//     }
+//     const existingMaterial = await Material.findOne({ category, estimatorId });
+//     const includeTax = existingMaterial?.includeTax === true;
+//     const showSales = existingMaterial?.showSales === true;
+//     for (const row of sheetData) {
+//       const product = await ProductModel.findOne({ name: row["materialName"] });
+//       if (!product) {
+//         res.status(404).json({ message: "Product not found" });
+//       }
+//       // const workItem = await workItemModel.findOne({
+//       //   workItemName: row["boqLineItem"],
+//       // });
+//       const total = (row["quantity"] || 0) * (row["cost"] || 0);
+//       const materialDetails = {
+//         // boqLineItem: applyOn == "BOQ Lines" ? workItem._id : null,
+//         applyOn: applyOn,
+//         category: category,
+//         materialName:
+//           category == "Material" ? product._id : row["materialName"],
+//         unitOfMeasure: row["unitOfMeasure"],
+//         quantity: row["quantity"],
+//         cost: row["cost"],
+//         total,
+//         includeTax,
+//         showSales,
+//       };
+//       const newMaterial = new Material({
+//         userId,
+//         estimatorId,
+//         ...materialDetails,
+//       });
+//       await newMaterial.save();
+//     }
+//     fs.unlink(filePath, (err) => {
+//       if (err) console.error("Error deleting file:", err);
+//     });
+//     res.status(201).json({ message: "Success" });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 const getAllByCategoryNames = async (req, res) => {
   try {
     const { category, estimatorId } = req.params;

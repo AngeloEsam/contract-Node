@@ -11,7 +11,7 @@ const CategoryModel = require("../models/categoryModel");
 const getProducts = async (req, res, next) => {
   try {
     let filterQueries = { ...req.query };
-
+    const userId = req.user._id;
     // Fields that should be excluded from the filter query
     const excludedQueries = ["page", "pages", "limit", "sort", "field"];
     excludedQueries.forEach((field) => delete filterQueries[field]);
@@ -19,7 +19,7 @@ const getProducts = async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 5;
     const skip = (page - 1) * limit;
-
+    filterQueries.userId = userId;
     // Get the total number of products (to calculate results and pages)
     const totalProducts = await Product.countDocuments(filterQueries);
 
