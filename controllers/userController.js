@@ -114,7 +114,6 @@ const login = async (req, res) => {
       process.env.SECRET_KEY,
       { expiresIn: "2d" }
     );
-
     res
       .cookie("jwtContracting", token, {
         httpOnly: process.env.NODE_ENV === "production",
@@ -243,7 +242,7 @@ const getSingleUser = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId).select("-password").populate("usersGroup");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
