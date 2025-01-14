@@ -17,9 +17,10 @@ const addWorkDetailsItem = async (req, res) => {
       subId,
       unitOfMeasure,
       assignedQuantity,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
       price,
       workItemName,
     } = req.body;
@@ -34,9 +35,10 @@ const addWorkDetailsItem = async (req, res) => {
       workDetails: {
         unitOfMeasure,
         assignedQuantity,
-        previousQuantity,
-        remainingQuantity,
-        financialCategory,
+        startDate,
+        endDate,
+        notes,
+        workItemType,
         price,
         total,
       },
@@ -192,7 +194,7 @@ const updateWorkItem = async (req, res) => {
           remainingQuantity: remainingQuantity || data.workDetails.remainingQuantity,
           financialCategory: financialCategory || data.workDetails.financialCategory,
           price: newPrice,
-          total, 
+          total,
         },
       },
       {
@@ -382,11 +384,12 @@ const addSingleBoq = async (req, res) => {
     const {
       workItemName,
       unitOfMeasure,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
       itemName,
       subItemName,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
     } = req.body;
 
     let total = assignedQuantity * price;
@@ -424,10 +427,11 @@ const addSingleBoq = async (req, res) => {
       workItemName,
       workDetails: {
         unitOfMeasure,
+        startDate,
+        endDate,
+        notes,
+        workItemType,
         assignedQuantity,
-        previousQuantity,
-        remainingQuantity,
-        financialCategory,
         price,
         total,
       },

@@ -36,6 +36,7 @@ const createWorkConfirmation = async (req, res) => {
       workConfirmationType,
       completionPercentage,
       activateInvoicingByPercentage,
+      negativeActive,
       status,
       projectName,
       partner,
@@ -74,6 +75,7 @@ const createWorkConfirmation = async (req, res) => {
       endDate,
       workConfirmationType,
       completionPercentage,
+      negativeActive,
       activateInvoicingByPercentage,
       status,
       projectName,
@@ -240,6 +242,7 @@ const updateWorkConfirmation = async (req, res) => {
       workConfirmationType,
       activateInvoicingByPercentage,
       completionPercentage,
+      negativeActive
     } = req.body;
     const userId = req.user._id;
 
@@ -263,6 +266,7 @@ const updateWorkConfirmation = async (req, res) => {
         workConfirmationType,
         activateInvoicingByPercentage,
         completionPercentage,
+        negativeActive
       },
       { new: true }
     );

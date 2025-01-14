@@ -23,6 +23,7 @@ const workConfirmationSchema = new mongoose.Schema(
     status: { type: String, required: true, default: "Estimation" },
     activateInvoicingByPercentage: { type: Boolean, default: false },
     completionPercentage: { type: Boolean, default: false },
+    negativeActive: { type: Boolean, default: false },
     workItems: [
       {
         workItemId: { type: mongoose.Schema.Types.ObjectId, ref: "Work" },
