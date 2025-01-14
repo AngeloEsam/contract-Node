@@ -172,9 +172,10 @@ const updateWorkItem = async (req, res) => {
     const {
       unitOfMeasure,
       assignedQuantity,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
       price,
       workItemName,
     } = req.body;
@@ -190,12 +191,13 @@ const updateWorkItem = async (req, res) => {
         workDetails: {
           unitOfMeasure: unitOfMeasure || data.workDetails.unitOfMeasure,
           assignedQuantity: newAssignedQuantity,
-          previousQuantity: previousQuantity || data.workDetails.previousQuantity,
-          remainingQuantity: remainingQuantity || data.workDetails.remainingQuantity,
-          financialCategory: financialCategory || data.workDetails.financialCategory,
-          price: newPrice,
-          total,
+          startDate: startDate || data.workDetails.startDate,
+          endDate: endDate || data.workDetails.endDate,
+          notes: notes || data.workDetails.notes,
+          workItemType: workItemType || data.workDetails.workItemType,
         },
+        price: newPrice,
+        total,
       },
       {
         new: true,
