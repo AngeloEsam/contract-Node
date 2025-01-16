@@ -136,11 +136,6 @@ exports.deleteCompanyProfile = asyncHandler(async (req, res) => {
 */
 exports.getCompanyProfileByUserId = asyncHandler(async (req, res, next) => {
     const { userId } = req.params
-    const { _id } = req.user
-    if (userId !== _id) {
-        return next(new ApiError("User doesn't match", 500))
-    }
-    console.log(userId)
     const companyProfile = await CompanyProfile.findOne({ userId }).populate({
         path: "userId",
         select: "-password"
