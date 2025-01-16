@@ -6,6 +6,7 @@ const dotenv = require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { OAuth2Client } = require("google-auth-library");
 const clientGoogle = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const CompanyProfile = require("../models/companyProfile.model")
 //regiser
 const register = async (req, res) => {
   const {
@@ -56,6 +57,8 @@ const register = async (req, res) => {
     });
 
     await user.save();
+    // Create Company Profile
+    await CompanyProfile.create({ companyName, companySize, companyType })
     const token = jwt.sign(
       {
         _id: user._id,

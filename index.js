@@ -19,11 +19,16 @@ const estimatorRoutes = require("./routes/estimatorRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const categoriesRoutes = require("./routes/categoriesRoute");
 const productsRoutes = require("./routes/productRoute");
+const companyProfileRoutes = require("./routes/companyProfile.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const globalErrorHandlerMiddleware = require("./middlewares/globalErrorHandlerMiddleware");
+const ApiError = require("./utils/ApiError");
 const app = express();
 const port = process.env.PORT || 5001;
+// Connect to DB
 connectDB();
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -38,7 +43,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+// Routes
 app.use("/api/auth", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/partners", partnerRoutes);
@@ -57,10 +62,20 @@ app.use("/api/estimators", estimatorRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/products", productsRoutes);
+app.use("/api/companyProfile", companyProfileRoutes);
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
 app.use("/partnerImages", express.static("partnerImages"));
+app.use('/companyProfileImages', express.static('companyProfileImages'));
+app.use("*", (req, res, next) => {
+  next(new ApiError(`Can't find this route ${req.originalUrl}`, 400))
+})
+
+// Global error handle
+app.use(globalErrorHandlerMiddleware)
+
+// Listen
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
 });
