@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const CompanyProfileSchema = new mongoose.Schema({
-    companyName: { type: String, required: true },
+    companyName: { type: String, required: true, unique: true },
     companySize: { type: String },
     companyType: { type: String, enum: ["Contractor", "Sub-Contractor"] },
     companyEmail: String,

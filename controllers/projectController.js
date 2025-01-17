@@ -236,7 +236,13 @@ const getSingleProject = async (req, res) => {
   const { _id } = req.user;
 
   try {
-    const project = await Project.findOne({ _id: projectId, userId: _id });
+    const project = await Project.findOne({ _id: projectId, userId: _id }).populate({
+      path: "contracts",
+      populate: [
+        { path: 'partner', select: 'partnerName' },
+        { path: 'project', select: 'projectName' },
+      ],
+    });
     if (!project) {
       return res.status(404).json({
         message: "Project not found or you're not authorized to view it",
@@ -346,8 +352,8 @@ const getProjectStatusSummary = async (req, res) => {
 
     const precentage =
       projectsForUserCompleted +
-        projectsForUserPlanning +
-        projectsForUserProgress || 1;
+      projectsForUserPlanning +
+      projectsForUserProgress || 1;
 
     const countStatus = [
       {

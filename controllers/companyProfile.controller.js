@@ -56,12 +56,17 @@ exports.getCompanyProfile = asyncHandler(async (req, res) => {
  * @route   /api/companyProfile
  * @access  Admin & User
 */
-exports.createCompanyProfile = asyncHandler(async (req, res) => {
+exports.createCompanyProfile = asyncHandler(async (req, res, next) => {
     // Fields data
     const { companyName, companySize, companyType, phone, website, taxId, companyId } = req.body
     const { _id: userId } = req.user
     // Logo
     const logo = req.file.filename
+    // Check is already exists
+    const existsCompany = await CompanyProfile.find({ companyName })
+    if (existsCompany) {
+        return next(new ApiError("Company name is already used>", 500))
+    }
     // Create company profile
     const companyProfile = await CompanyProfile.create({ companyName, companySize, companyType, userId, logo, phone, website, taxId, companyId })
     res.status(201).json({ companyProfile })
@@ -106,9 +111,13 @@ exports.updateCompanyProfile = asyncHandler(async (req, res) => {
         updateData.logo = newLogo; // Add the new logo to the update
     }
 
+    // Check is already exists
+    const existsCompany = await CompanyProfile.find({ companyName })
+    if (existsCompany) {
+        return next(new ApiError("Company name is already used>", 500))
+    }
     // Update the company profile
     const updatedCompanyProfile = await CompanyProfile.findByIdAndUpdate(id, updateData, { new: true });
-
     // Update user information
     await User.findByIdAndUpdate(userId, { companyName, companySize, companyType });
 
@@ -124,6 +133,15 @@ exports.updateCompanyProfile = asyncHandler(async (req, res) => {
 */
 exports.deleteCompanyProfile = asyncHandler(async (req, res) => {
     const { id } = req.params
+    // Fetch the current company profile
+    const companyProfile = await CompanyProfile.findById(id);
+    // Remove the old logo
+    if (companyProfile.logo) {
+        const oldLogoPath = path.join(__dirname, "../companyProfileImages", companyProfile.logo);
+        if (fs.existsSync(oldLogoPath)) {
+            fs.unlinkSync(oldLogoPath); // Remove the old logo file
+        }
+    }
     // Delete company profile
     await CompanyProfile.findByIdAndDelete(id)
     res.status(204).send()
