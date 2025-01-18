@@ -2,6 +2,7 @@ const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const WorkConfirmation = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
+const asyncHandler = require("express-async-handler")
 
 const getWorkItemsForSpecificContract = async (contractId) => {
   const contract = await Contract.findById(contractId).populate({
@@ -621,6 +622,20 @@ const searchWorkConfirmation = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// Get Work Confirmation by Project Id
+const getWorkConfirmationByProjectId = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const workConfirmation = await WorkConfirmation.find({ projectName: projectId }).populate(["contractId", "projectName", "partner"]).limit(limit).skip(skip)
+  const totalPages = Math.ceil(workConfirmation.length / limit);
+  res.status(200).json({
+    workConfirmation,
+    totalPages,
+    currentPage: page,
+  })
+})
 // const searchWorkConfirmation = async (req, res) => {
 //   try {
 //     const { projectName, partnerName, status, contractId } = req.query;
@@ -746,4 +761,5 @@ module.exports = {
   updateWorkConfirmationBaseOnWorkItem,
   searchByWorkItemName,
   searchWorkConfirmation,
+  getWorkConfirmationByProjectId
 };
