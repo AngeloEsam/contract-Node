@@ -8,6 +8,7 @@ const Project = require("../models/projectModel");
 const workItemModel = require("../models/workItemModel");
 const ProductModel = require("../models/productModel");
 const mongoose = require("mongoose");
+const asyncHandler = require("express-async-handler")
 
 const addMaterial = async (req, res) => {
   try {
@@ -497,6 +498,11 @@ const getAllByCategoryNames = async (req, res) => {
       .json({ message: "Failed to fetch materials by category.", error });
   }
 };
+const getAllMaterialsByBoqLineItemId = asyncHandler(async (req, res) => {
+  const { boqLineItemId } = req.params
+  const materials = await Material.find({ boqLineItem: boqLineItemId })
+  res.status(200).json(materials)
+})
 module.exports = {
   addMaterial,
   getAllMaterials,
@@ -506,4 +512,5 @@ module.exports = {
   getAllByCategory,
   insertMaterial,
   getAllByCategoryNames,
+  getAllMaterialsByBoqLineItemId
 };

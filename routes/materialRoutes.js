@@ -12,7 +12,9 @@ const {
   getAllByCategory,
   insertMaterial,
   getAllByCategoryNames,
+  getAllMaterialsByBoqLineItemId
 } = require("../controllers/materialController");
+const { getAllMaterialsByBoqLineItemIdValidator } = require("../utils/validators/material.validator");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../excelFiles");
@@ -33,6 +35,7 @@ router.post("/", auth, addMaterial);
 router.post("/calculate/:estimatorId", auth, calculateSalesAndTax);
 router.post("/:estimatorId", auth, upload.single("file"), insertMaterial);
 router.get("/:estimatorId", auth, getAllMaterials);
+router.get("/:boqLineItemId/boq", auth, getAllMaterialsByBoqLineItemIdValidator, getAllMaterialsByBoqLineItemId);
 router.get("/:category/:estimatorId", auth, getAllByCategory);
 router.get("/single/:materialId", auth, getSingleMaterial);
 router.get("/names/:category/:estimatorId", auth, getAllByCategoryNames);

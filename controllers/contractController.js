@@ -21,6 +21,7 @@ const createContract = async (req, res) => {
       typeOfProgress,
       status,
       description,
+      businessGuarantee
     } = req.body;
     if (!contractType || !startDate || !endDate || !typeOfProgress || !code) {
       return res
@@ -34,6 +35,7 @@ const createContract = async (req, res) => {
       project: projectId,
       partner: partnerId,
       consultant: consultantId,
+      businessGuarantee,
       startDate,
       endDate,
       typeOfProgress,
@@ -224,16 +226,16 @@ const getSingleContract = async (req, res) => {
     }
 
     const contract = await Contract.findById(contractId)
-    .populate({
-      path: "mainId",
-      sort: { createdAt: -1 },
-      populate: {
-        path: "subItems",
+      .populate({
+        path: "mainId",
+        sort: { createdAt: -1 },
         populate: {
-          path: "workItems",
+          path: "subItems",
+          populate: {
+            path: "workItems",
+          },
         },
-      },
-    });
+      });
     if (!contract) {
       return res.status(404).json({ message: "Contract not found" });
     }
@@ -287,7 +289,6 @@ const updateContract = async (req, res) => {
         .status(403)
         .json({ message: "You don't have permission to update this contract" });
     }
-
     const updateData = {
       code: req.body.code || contract.code,
       name: req.body.name || contract.name,
@@ -300,6 +301,7 @@ const updateContract = async (req, res) => {
       project: req.body.project || contract.project,
       partner: req.body.partner || contract.partner,
       consultant: req.body.consultant || contract.consultant,
+      businessGuarantee: req.body.businessGuarantee || contract.businessGuarantee
     };
 
     const updatedContract = await Contract.findByIdAndUpdate(
@@ -485,7 +487,7 @@ const getUserContractsCode = async (req, res) => {
     if (user.parentId == null) {
       user = await User.findById(userId).populate({
         path: "contracts",
-        select: "code name _id contractType partner project startDate endDate",
+        select: "code name _id contractType typeOfProgress partner project startDate endDate",
         populate: [
           { path: "project", select: "projectName" },
           { path: "partner", select: "partnerName" },
@@ -498,7 +500,7 @@ const getUserContractsCode = async (req, res) => {
       parentUser = await User.findById(user.parentId);
       user = await User.findById(parentUser._id).populate({
         path: "contracts",
-        select: "code _id",
+        select: "code _id typeOfProgress",
       });
       totalContracts = await User.findById(parentUser._id)
         .populate("contracts")

@@ -11,6 +11,7 @@ const getWorkItemsForSpecificContract = async (contractId) => {
       path: "subItems",
     },
   });
+  console.log("Contract: ", contract)
   if (!contract) {
     return [];
   }
@@ -22,6 +23,7 @@ const getWorkItemsForSpecificContract = async (contractId) => {
       });
     });
   });
+  console.log("WorkItems:", workItemss)
   // const workItemsss = await workItemModel.find({ _id: { $in: workItemss } });
   return workItemss;
 };
@@ -144,7 +146,7 @@ const getSingleWorkConfirmation = async (req, res) => {
     })
       .populate({
         path: "contractId",
-        select: "code totalContractValue",
+        select: "code totalContractValue businessGuarantee",
       })
       .populate({
         path: "workItems",
@@ -322,11 +324,16 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
         message: "Work Item has already been calculated before!",
       });
     }
-
+    if (!currentQuantity) {
+      return res.status(400).json({
+        message: "Current Work QTY is required",
+      });
+    }
     // Calculate updated quantities
     const updatedTotalQuantity =
       currentWorkItem.previousQuantity + currentQuantity;
 
+    console.log(updatedTotalQuantity)
     if (updatedTotalQuantity > existingWorkItem.workDetails.assignedQuantity) {
       return res.status(400).json({
         message: `The total quantity (${updatedTotalQuantity}) exceeds the assigned contract quantity (${existingWorkItem.workDetails.assignedQuantity}).`,
@@ -403,6 +410,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     res.status(500).json({
       message: "Error updating Work Confirmation",
       error: error.message,
+      stack: error.stack
     });
   }
 };
