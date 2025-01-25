@@ -68,6 +68,7 @@ app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
 app.use("/partnerImages", express.static("partnerImages"));
 app.use('/companyProfileImages', express.static('companyProfileImages'));
+app.use('/uploads', express.static('uploads'));
 app.use("*", (req, res, next) => {
   next(new ApiError(`Can't find this route ${req.originalUrl}`, 400))
 })

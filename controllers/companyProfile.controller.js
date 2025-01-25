@@ -77,7 +77,7 @@ exports.createCompanyProfile = asyncHandler(async (req, res, next) => {
  * @route   /api/companyProfile/:id
  * @access  Admin & User
  */
-exports.updateCompanyProfile = asyncHandler(async (req, res) => {
+exports.updateCompanyProfile = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { _id: userId } = req.user;
     const { companyName, companySize, companyType, phone, website, taxId, companyId } = req.body;
@@ -113,9 +113,6 @@ exports.updateCompanyProfile = asyncHandler(async (req, res) => {
 
     // Check is already exists
     const existsCompany = await CompanyProfile.find({ companyName })
-    if (existsCompany) {
-        return next(new ApiError("Company name is already used>", 500))
-    }
     // Update the company profile
     const updatedCompanyProfile = await CompanyProfile.findByIdAndUpdate(id, updateData, { new: true });
     // Update user information

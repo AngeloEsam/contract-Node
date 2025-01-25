@@ -7,7 +7,7 @@ const workConfirmationSchema = new mongoose.Schema(
     contractId: { type: mongoose.Schema.Types.ObjectId, ref: "Contract" },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     contractType: { type: String, required: true },
-    projectName:{ type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+    projectName: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
     partner: { type: mongoose.Schema.Types.ObjectId, ref: "Partner" },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
@@ -36,6 +36,20 @@ const workConfirmationSchema = new mongoose.Schema(
         invoicing: { type: Number },
         completion: { type: Number },
         isCalculated: { type: Boolean, default: false },
+        lastProgress: Date,
+        documents: [{
+          title: { type: String },
+          size: { type: Number },
+          type: { type: String },
+        }],
+        images: [{ type: String, unique: true }],
+        QC_Point: [
+          {
+            title: String,
+            passed: { type: Boolean, default: false },
+            QC_PointDate: { type: Date, default: Date.now() },
+          }
+        ],
       },
     ],
     totalAmount: { type: Number, default: 0 },
