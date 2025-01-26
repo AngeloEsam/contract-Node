@@ -1,8 +1,10 @@
+const path = require("path");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const WorkConfirmation = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
 const asyncHandler = require("express-async-handler")
+const fs = require("fs")
 
 const getWorkItemsForSpecificContract = async (contractId) => {
   const contract = await Contract.findById(contractId).populate({
@@ -508,10 +510,18 @@ const deleteWorkItemDetails = asyncHandler(async (req, res) => {
     }
     existingWorkConfirmation.workItems[workItemIndex].QC_Point = currentWorkItem.QC_Point.filter((point) => point._id.toString() !== qcPointId)
   }
-  if (image) {
+  if (image && currentWorkItem.images.includes(image)) {
+    const oldImagePath = path.join(__dirname, "../uploads", image)
+    if (fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath)
+    }
     existingWorkConfirmation.workItems[workItemIndex].images = currentWorkItem.images.filter((img) => img !== image)
   }
-  if (document) {
+  if (document && currentWorkItem.documents.filter((doc) => doc._id.toString() === document)[0]) {
+    const oldDocumentPath = path.join(__dirname, "../uploads", currentWorkItem.documents.filter((doc) => doc._id.toString() === document)[0].title)
+    if (fs.existsSync(oldDocumentPath)) {
+      fs.unlinkSync(oldDocumentPath)
+    }
     existingWorkConfirmation.workItems[workItemIndex].documents = currentWorkItem.documents.filter((doc) => doc._id.toString() !== document)
   }
   await existingWorkConfirmation.save()
