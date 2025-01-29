@@ -152,7 +152,6 @@ const getSingleWorkConfirmation = async (req, res) => {
         path: "workItems",
         populate: {
           path: "workItemId",
-          select: "workDetails workItemName _id",
         },
       })
       .populate("projectName", "projectName")
@@ -414,119 +413,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     });
   }
 };
-const updateWorkConfirmationBaseOnWorkItemDetails = asyncHandler(async (req, res) => {
-  const { id, workConfirmationId } = req.params; // id: workItemId
-  const { title, passed } = req.body;
-  const images = req.files?.images || [];
-  const documents = req.files?.documents || [];
 
-  // Find the specific Work Item
-  const existingWorkItem = await workItemModel.findById(id);
-  if (!existingWorkItem) {
-    return res.status(404).json({ message: "Work Item not found!" });
-  }
-
-  // Find the current Work Confirmation document
-  const existingWorkConfirmation = await WorkConfirmation.findById(
-    workConfirmationId
-  );
-  if (!existingWorkConfirmation) {
-    return res.status(404).json({ message: "Work Confirmation not found!" });
-  }
-
-  // Locate the specific work item within the workItems array
-  const workItemIndex = existingWorkConfirmation.workItems.findIndex(
-    (item) => item.workItemId.toString() === id
-  );
-
-  if (workItemIndex === -1) {
-    return res.status(404).json({
-      message: "Work Item not associated with this Work Confirmation!",
-    });
-  }
-  if (documents.length > 0) {
-    documents.forEach((doc) => {
-      const documentObject = {
-        title: doc?.filename,
-        size: Number(doc?.size),
-        type: doc?.mimetype,
-      };
-      existingWorkConfirmation.workItems[workItemIndex].documents.push(documentObject);
-    });
-  }
-  if (images.length > 0) {
-    images.map((image) => {
-      existingWorkConfirmation.workItems[workItemIndex].images.push(image.filename)
-    })
-  }
-  if (title && passed) {
-    existingWorkConfirmation.workItems[workItemIndex].QC_Point.push({ title, passed })
-  }
-  // Save the updated Work Confirmation
-  await existingWorkConfirmation.save();
-
-  res.status(200).json({
-    message: "Work Confirmation updated successfully!",
-    data: existingWorkConfirmation,
-  });
-})
-const deleteWorkItemDetails = asyncHandler(async (req, res) => {
-  const { id, workConfirmationId } = req.params; // id: workItemId
-  const { qcPointId, image, document } = req.query;
-  // Find the specific Work Item
-  const existingWorkItem = await workItemModel.findById(id);
-  if (!existingWorkItem) {
-    return res.status(404).json({ message: "Work Item not found!" });
-  }
-
-  // Find the current Work Confirmation document
-  const existingWorkConfirmation = await WorkConfirmation.findById(
-    workConfirmationId
-  );
-  if (!existingWorkConfirmation) {
-    return res.status(404).json({ message: "Work Confirmation not found!" });
-  }
-
-  // Locate the specific work item within the workItems array
-  const workItemIndex = existingWorkConfirmation.workItems.findIndex(
-    (item) => item.workItemId.toString() === id
-  );
-
-  if (workItemIndex === -1) {
-    return res.status(404).json({
-      message: "Work Item not associated with this Work Confirmation!",
-    });
-  }
-  const currentWorkItem = existingWorkConfirmation.workItems[workItemIndex];
-  if (qcPointId) {
-    // Find the QC_Point
-    const qcPointIndex = currentWorkItem.QC_Point.findIndex(
-      (point) => point._id.toString() === qcPointId
-    );
-    if (qcPointIndex === -1) {
-      return res.status(404).json({
-        message: "QC Point not found!",
-      });
-    }
-    existingWorkConfirmation.workItems[workItemIndex].QC_Point = currentWorkItem.QC_Point.filter((point) => point._id.toString() !== qcPointId)
-  }
-  if (image && currentWorkItem.images.includes(image)) {
-    const oldImagePath = path.join(__dirname, "../uploads", image)
-    if (fs.existsSync(oldImagePath)) {
-      fs.unlinkSync(oldImagePath)
-    }
-    existingWorkConfirmation.workItems[workItemIndex].images = currentWorkItem.images.filter((img) => img !== image)
-  }
-  if (document && currentWorkItem.documents.filter((doc) => doc._id.toString() === document)[0]) {
-    const oldDocumentPath = path.join(__dirname, "../uploads", currentWorkItem.documents.filter((doc) => doc._id.toString() === document)[0].title)
-    if (fs.existsSync(oldDocumentPath)) {
-      fs.unlinkSync(oldDocumentPath)
-    }
-    existingWorkConfirmation.workItems[workItemIndex].documents = currentWorkItem.documents.filter((doc) => doc._id.toString() !== document)
-  }
-  await existingWorkConfirmation.save()
-  res.status(204).send()
-})
 const searchByWorkItemName = async (req, res) => {
   try {
     const { workConfirmationId } = req.params;
@@ -879,8 +766,6 @@ module.exports = {
   deleteWorkConfirmation,
   updateWorkConfirmation,
   updateWorkConfirmationBaseOnWorkItem,
-  updateWorkConfirmationBaseOnWorkItemDetails,
-  deleteWorkItemDetails,
   searchByWorkItemName,
   searchWorkConfirmation,
   getWorkConfirmationByProjectId

@@ -9,6 +9,7 @@ const deductionModel = require("../models/deductionModel");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const materialModel = require("../models/materialModel");
+const asyncHandler = require("express-async-handler")
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -523,6 +524,83 @@ const getWorkItemsNameForContract = async (req, res) => {
     return res.status(400).json({ message: e.message });
   }
 };
+const updateWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, passed } = req.body;
+  const images = req.files?.images || [];
+  const documents = req.files?.documents || [];
+
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+
+  if (documents.length > 0) {
+    documents.forEach((doc) => {
+      const documentObject = {
+        title: doc?.filename,
+        size: Number(doc?.size),
+        type: doc?.mimetype,
+      };
+      existingWorkItem.documents.push(documentObject);
+    });
+  }
+  if (images.length > 0) {
+    images.map((image) => {
+      existingWorkItem.images.push(image.filename)
+    })
+  }
+  if (title && passed) {
+    existingWorkItem.QC_Point.push({ title, passed })
+  }
+  // Save the updated work item
+  await existingWorkItem.save();
+
+  res.status(200).json({
+    message: "Work item updated successfully!",
+    data: existingWorkItem,
+  });
+})
+const deleteWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { qcPointId, image, document } = req.query;
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+
+  if (qcPointId) {
+    // Find the QC_Point
+    const qcPointIndex = existingWorkItem.QC_Point.findIndex(
+      (point) => point._id.toString() === qcPointId
+    );
+    if (qcPointIndex === -1) {
+      return res.status(404).json({
+        message: "QC Point not found!",
+      });
+    }
+    existingWorkItem.QC_Point = existingWorkItem.QC_Point.filter((point) => point._id.toString() !== qcPointId)
+  }
+  if (image && existingWorkItem.images.includes(image)) {
+    const oldImagePath = path.join(__dirname, "../uploads", image)
+    if (fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath)
+    }
+    existingWorkItem.images = existingWorkItem.images.filter((img) => img !== image)
+  }
+  const currentDocument = existingWorkItem.documents.filter((doc) => doc._id.toString() === document)[0]
+  if (document && currentDocument) {
+    const oldDocumentPath = path.join(__dirname, "../uploads", currentDocument.title)
+    if (fs.existsSync(oldDocumentPath)) {
+      fs.unlinkSync(oldDocumentPath)
+    }
+    existingWorkItem.documents = existingWorkItem.documents.filter((doc) => doc._id.toString() !== document)
+  }
+  await existingWorkItem.save()
+  res.status(204).send()
+})
 module.exports = {
   addWorkDetailsItem,
   getAllWorkItems,
@@ -534,6 +612,8 @@ module.exports = {
   addSingleBoq,
   getWorkItemsForContract,
   getWorkItemsNameForContract,
+  updateWorkItemDetails,
+  deleteWorkItemDetails
 };
 
 // const deleteBoq = async (req, res) => {

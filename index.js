@@ -38,9 +38,9 @@ app.use(
       "https://whale-app-bpeim.ondigitalocean.app",
       "http://localhost:5173",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", 'Access-Control-Allow-Origin'],
   })
 );
 // Routes
