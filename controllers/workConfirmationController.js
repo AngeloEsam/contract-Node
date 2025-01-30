@@ -643,6 +643,11 @@ const getWorkConfirmationByProjectId = asyncHandler(async (req, res, next) => {
     currentPage: page,
   })
 })
+const getWorkConfirmationsByContractId = asyncHandler(async (req, res) => {
+  const { contractId } = req.params;
+  const workConfirmations = await WorkConfirmation.find({ contractId: { $in: contractId } }).populate(["contractId"]);
+  res.status(200).json(workConfirmations)
+})
 // const searchWorkConfirmation = async (req, res) => {
 //   try {
 //     const { projectName, partnerName, status, contractId } = req.query;
@@ -768,5 +773,6 @@ module.exports = {
   updateWorkConfirmationBaseOnWorkItem,
   searchByWorkItemName,
   searchWorkConfirmation,
-  getWorkConfirmationByProjectId
+  getWorkConfirmationByProjectId,
+  getWorkConfirmationsByContractId
 };

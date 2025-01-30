@@ -10,8 +10,10 @@ const {
   searchByWorkItemName,
   searchWorkConfirmation,
   getWorkConfirmationByProjectId,
+  getWorkConfirmationsByContractId
 } = require("../controllers/workConfirmationController");
 const { getWorkConfirmationByProjectIdValidator } = require("../utils/validators/project.validator");
+const { getWorkConfirmationByContractIdValidator } = require("../utils/validators/workConfirmation.validator");
 const { auth } = require("../middlewares/auth");
 
 
@@ -30,5 +32,6 @@ router.put(
   auth,
   updateWorkConfirmationBaseOnWorkItem
 );
-
+// get workConfirmations by contractId
+router.get("/:contractId/contract", auth, getWorkConfirmationByContractIdValidator, getWorkConfirmationsByContractId)
 module.exports = router;
