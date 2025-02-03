@@ -5,6 +5,7 @@ const mainItemModel = require("../models/mainItemModel");
 const subItemModel = require("../models/subItemModel");
 const Project = require("../models/projectModel");
 const Partner = require("../models/partnerModel");
+const workConfirmationModel = require("../models/workConfirmationModel");
 
 const createContract = async (req, res) => {
   try {
@@ -243,7 +244,6 @@ const getSingleContract = async (req, res) => {
       contract.mainId.map((item) => item._id.toString())
     );
     const totalMainItems = uniqueMainItems.size;
-
     res.status(200).json({ data: contract, totalMainItems: totalMainItems });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -336,7 +336,6 @@ const calculateTaxAndPayment = async (req, res) => {
       },
     });
 
-    console.log(contract);
     contract.mainId.forEach((mainItem) => {
       mainItem.subItems.forEach((subItem) => {
         subItem.workItems.forEach((workItem) => {

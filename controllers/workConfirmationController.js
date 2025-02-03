@@ -146,7 +146,10 @@ const getSingleWorkConfirmation = async (req, res) => {
     })
       .populate({
         path: "contractId",
-        select: "code totalContractValue businessGuarantee",
+        select: "code totalContractValue businessGuarantee taxRate taxValue consultant endDate startDate downPaymentRate downPaymentValue",
+        populate: {
+          path: "consultant",
+        }
       })
       .populate({
         path: "workItems",
@@ -189,7 +192,6 @@ const getSingleWorkConfirmation = async (req, res) => {
       })
       .filter(Boolean);
     const paginatedWorkItems = workItems.slice(skip, skip + limit);
-
     res.status(200).json({
       data: {
         ...workConfirmation.toObject(),
@@ -645,7 +647,10 @@ const getWorkConfirmationByProjectId = asyncHandler(async (req, res, next) => {
 })
 const getWorkConfirmationsByContractId = asyncHandler(async (req, res) => {
   const { contractId } = req.params;
-  const workConfirmations = await WorkConfirmation.find({ contractId: { $in: contractId } }).populate(["contractId"]);
+  const workConfirmations = await WorkConfirmation.find({ contractId: { $in: contractId } }).populate("contractId").populate({
+    path: "workItems",
+    populate: "workItemId"
+  });
   res.status(200).json(workConfirmations)
 })
 // const searchWorkConfirmation = async (req, res) => {

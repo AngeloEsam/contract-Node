@@ -36,7 +36,7 @@ const contractSchema = new mongoose.Schema({
     enum: ["Estimation", "Approved"],
     default: "Estimation",
   },
-  businessGuarantee: String,
+  businessGuarantee: { type: Number, default: 0 },
   description: { type: String },
   mainId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Main" }],
   // userId: { type: mongoose.Schema.Types.ObjectId,ref:'User', required: true },
