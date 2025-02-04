@@ -69,6 +69,10 @@ app.use("/projectImages", express.static("projectImages"));
 app.use("/partnerImages", express.static("partnerImages"));
 app.use('/companyProfileImages', express.static('companyProfileImages'));
 app.use('/uploads', express.static('uploads'));
+app.get("/download/:filename", (req, res) => {
+  const filePath = `uploads/${req.params.filename}`;
+  res.download(filePath);
+});
 app.use("*", (req, res, next) => {
   next(new ApiError(`Can't find this route ${req.originalUrl}`, 400))
 })

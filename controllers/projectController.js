@@ -74,8 +74,8 @@ const getUserProjects = async (req, res) => {
   try {
     const { _id } = req.user;
     const projects = await Project.find({ userId: _id }).select(
-      "projectName id"
-    );
+      "projectName id contracts"
+    ).populate("contracts");
     if (!projects) {
       return res
         .status(404)
