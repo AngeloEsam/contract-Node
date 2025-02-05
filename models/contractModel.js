@@ -45,6 +45,14 @@ const contractSchema = new mongoose.Schema({
   dueAmount: { type: Number, default: 0 },
   totalDeduction: { type: Number, default: 0 },
   totalAddition: { type: Number, default: 0 },
+  claims: [
+    {
+      value: { type: Number, required: true },
+      description: String,
+      date: { type: Date, default: Date.now() },
+      notes: String,
+    },
+  ],
 });
 
 const Contract = mongoose.model("Contract", contractSchema);

@@ -15,7 +15,13 @@ const {
   searchContracts,
   getUserContractsCode,
   getSingleContractAhmed,
+  addClaimOnContract,
+  deleteClaimOnContract,
 } = require("../controllers/contractController");
+const {
+  deleteClaimOnContractValidator,
+  addClaimOnContractValidator,
+} = require("../utils/validators/claim.validator");
 const { auth } = require("../middlewares/auth");
 const router = express.Router();
 //upload image
@@ -33,17 +39,29 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-router.get("/",auth, getContracts);
-router.get("/user",auth, getUserContracts);
-router.get("/code",auth, getUserContractsCode);
-router.get("/tenant",auth, getTenantContracts);
+router.get("/", auth, getContracts);
+router.get("/user", auth, getUserContracts);
+router.get("/code", auth, getUserContractsCode);
+router.get("/tenant", auth, getTenantContracts);
 router.get("/search", auth, searchContracts);
-router.get("/:contractId",auth, getSingleContract);
+router.get("/:contractId", auth, getSingleContract);
 router.get("/ahmed/:contractId", auth, getSingleContractAhmed);
-router.get('/user/previous-item-names', auth, getPreviousItemNamesByUser);
-router.post("/",auth, createContract);
-router.post("/calculate/:contractId",auth, calculateTaxAndPayment);
-router.put("/:contractId",auth, updateContract);
-router.delete("/:contractId",auth, deleteContract);
+router.get("/user/previous-item-names", auth, getPreviousItemNamesByUser);
+router.post("/", auth, createContract);
+router.post("/calculate/:contractId", auth, calculateTaxAndPayment);
+router.post(
+  "/:contractId/claim",
+  auth,
+  addClaimOnContractValidator,
+  addClaimOnContract
+);
+router.put("/:contractId", auth, updateContract);
+router.delete("/:contractId", auth, deleteContract);
+router.delete(
+  "/:contractId/:claimId",
+  auth,
+  deleteClaimOnContractValidator,
+  deleteClaimOnContract
+);
 
 module.exports = router;

@@ -6,6 +6,8 @@ const subItemModel = require("../models/subItemModel");
 const Project = require("../models/projectModel");
 const Partner = require("../models/partnerModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
+const asyncHandler = require("express-async-handler");
+const ApiError = require("../utils/ApiError");
 
 const createContract = async (req, res) => {
   try {
@@ -22,7 +24,7 @@ const createContract = async (req, res) => {
       typeOfProgress,
       status,
       description,
-      businessGuarantee
+      businessGuarantee,
     } = req.body;
     if (!contractType || !startDate || !endDate || !typeOfProgress || !code) {
       return res
@@ -218,7 +220,6 @@ const deleteContract = async (req, res) => {
   }
 };
 
-
 const getSingleContract = async (req, res) => {
   try {
     const { contractId } = req.params;
@@ -226,17 +227,16 @@ const getSingleContract = async (req, res) => {
       return res.status(400).json({ message: "Contract ID is required" });
     }
 
-    const contract = await Contract.findById(contractId)
-      .populate({
-        path: "mainId",
-        sort: { createdAt: -1 },
+    const contract = await Contract.findById(contractId).populate({
+      path: "mainId",
+      sort: { createdAt: -1 },
+      populate: {
+        path: "subItems",
         populate: {
-          path: "subItems",
-          populate: {
-            path: "workItems",
-          },
+          path: "workItems",
         },
-      });
+      },
+    });
     if (!contract) {
       return res.status(404).json({ message: "Contract not found" });
     }
@@ -301,7 +301,8 @@ const updateContract = async (req, res) => {
       project: req.body.project || contract.project,
       partner: req.body.partner || contract.partner,
       consultant: req.body.consultant || contract.consultant,
-      businessGuarantee: req.body.businessGuarantee || contract.businessGuarantee
+      businessGuarantee:
+        req.body.businessGuarantee || contract.businessGuarantee,
     };
 
     const updatedContract = await Contract.findByIdAndUpdate(
@@ -486,7 +487,8 @@ const getUserContractsCode = async (req, res) => {
     if (user.parentId == null) {
       user = await User.findById(userId).populate({
         path: "contracts",
-        select: "code name _id contractType typeOfProgress partner project startDate endDate",
+        select:
+          "code name _id contractType typeOfProgress partner project startDate endDate",
         populate: [
           { path: "project", select: "projectName" },
           { path: "partner", select: "partnerName" },
@@ -513,6 +515,33 @@ const getUserContractsCode = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const addClaimOnContract = asyncHandler(async (req, res) => {
+  const { contractId } = req.params;
+  const { claimValue, description, notes } = req.body;
+  const contract = await Contract.findById(contractId);
+  if (!contract) {
+    return new ApiError("Couldn't find contract", 404);
+  }
+  contract.claims.push({ value: claimValue, description, notes });
+  await contract.save();
+  res.status(201).json({ message: "Claim added successfully", contract });
+});
+const deleteClaimOnContract = asyncHandler(async (req, res) => {
+  const { contractId, claimId } = req.params;
+  const contract = await Contract.findById(contractId);
+  if (!contract) {
+    return new ApiError("Couldn't find contract", 404);
+  }
+  const index = contract.claims.findIndex(
+    (claim) => claim._id.toString() === claimId
+  );
+  if (index === -1) {
+    return new ApiError("Couldn't find claim", 404);
+  }
+  contract.claims.splice(index, 1);
+  await contract.save();
+  res.status(200).json({ message: "Claim deleted successfully", contract });
+});
 module.exports = {
   createContract,
   getContracts,
@@ -526,4 +555,6 @@ module.exports = {
   searchContracts,
   getUserContractsCode,
   getSingleContractAhmed,
+  addClaimOnContract,
+  deleteClaimOnContract
 };
