@@ -38,9 +38,13 @@ app.use(
       "https://whale-app-bpeim.ondigitalocean.app",
       "http://localhost:5173",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", 'OPTIONS'],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", 'Access-Control-Allow-Origin'],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Access-Control-Allow-Origin",
+    ],
   })
 );
 // Routes
@@ -67,20 +71,27 @@ app.use("/api/companyProfile", companyProfileRoutes);
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
 app.use("/partnerImages", express.static("partnerImages"));
-app.use('/companyProfileImages', express.static('companyProfileImages'));
-app.use('/uploads', express.static('uploads'));
+app.use("/companyProfileImages", express.static("companyProfileImages"));
+app.use("/uploads", express.static("uploads"));
 app.get("/download/:filename", (req, res) => {
   const filePath = `uploads/${req.params.filename}`;
   res.download(filePath);
 });
 app.use("*", (req, res, next) => {
-  next(new ApiError(`Can't find this route ${req.originalUrl}`, 400))
-})
+  next(new ApiError(`Can't find this route ${req.originalUrl}`, 400));
+});
 
 // Global error handle
-app.use(globalErrorHandlerMiddleware)
+app.use(globalErrorHandlerMiddleware);
 
 // Listen
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
+});
+
+// Handle rejection errors
+
+process.on("unhandledRejection", (err, promise) => {
+  console.error(`Unhandled rejection at: ${promise}, ${err.stack}`);
+  server.close(() => process.exit(1));
 });
