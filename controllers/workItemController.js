@@ -9,7 +9,7 @@ const deductionModel = require("../models/deductionModel");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const materialModel = require("../models/materialModel");
-const asyncHandler = require("express-async-handler")
+const asyncHandler = require("express-async-handler");
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -25,7 +25,6 @@ const addWorkDetailsItem = async (req, res) => {
       price,
       workItemName,
     } = req.body;
-
     const total = assignedQuantity * price;
     const subItem = await subItemModel.findById(subId);
     if (!subItem) {
@@ -180,10 +179,14 @@ const updateWorkItem = async (req, res) => {
       price,
       workItemName,
     } = req.body;
-    const newAssignedQuantity = assignedQuantity || data.workDetails.assignedQuantity;
+    const newAssignedQuantity =
+      assignedQuantity || data.workDetails.assignedQuantity;
     const newPrice = price || data.workDetails.price;
 
-    const total = newAssignedQuantity && newPrice ? newAssignedQuantity * newPrice : data.workDetails.total;
+    const total =
+      newAssignedQuantity && newPrice
+        ? newAssignedQuantity * newPrice
+        : data.workDetails.total;
 
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
@@ -220,7 +223,6 @@ const updateWorkItem = async (req, res) => {
     });
   }
 };
-
 
 const deleteWork = async (req, res) => {
   try {
@@ -526,10 +528,10 @@ const getWorkItemsNameForContract = async (req, res) => {
 };
 const updateWorkItemDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, passed } = req.body;
+  const { title, passed, task } = req.body;
   const images = req.files?.images || [];
   const documents = req.files?.documents || [];
-
+  const { task: taskId, progress } = req.query;
   // Find the specific Work Item
   const existingWorkItem = await WorkItem.findById(id);
   if (!existingWorkItem) {
@@ -548,11 +550,33 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
   }
   if (images.length > 0) {
     images.map((image) => {
-      existingWorkItem.images.push(image.filename)
-    })
+      existingWorkItem.images.push(image.filename);
+    });
   }
   if (title && passed) {
-    existingWorkItem.QC_Point.push({ title, passed })
+    existingWorkItem.QC_Point.push({ title, passed });
+  }
+  if (task) {
+    if (!taskId) {
+      existingWorkItem.tasks.push({ ...task });
+    } else {
+      const taskIndex = existingWorkItem.tasks.findIndex(
+        (task) => task._id.toString() === taskId
+      );
+      if (taskIndex === -1) {
+        return res.status(404).json({ message: "Task not found!" });
+      }
+      existingWorkItem.tasks[taskIndex] = { ...task };
+    }
+  }
+  if (taskId && progress) {
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: "Task not found!" });
+    }
+    existingWorkItem.tasks[taskIndex].progress = Number(progress);
   }
   // Save the updated work item
   await existingWorkItem.save();
@@ -561,16 +585,15 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
     message: "Work item updated successfully!",
     data: existingWorkItem,
   });
-})
+});
 const deleteWorkItemDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { qcPointId, image, document } = req.query;
+  const { qcPointId, image, document, task: taskId } = req.query;
   // Find the specific Work Item
   const existingWorkItem = await WorkItem.findById(id);
   if (!existingWorkItem) {
     return res.status(404).json({ message: "Work Item not found!" });
   }
-
   if (qcPointId) {
     // Find the QC_Point
     const qcPointIndex = existingWorkItem.QC_Point.findIndex(
@@ -581,26 +604,52 @@ const deleteWorkItemDetails = asyncHandler(async (req, res) => {
         message: "QC Point not found!",
       });
     }
-    existingWorkItem.QC_Point = existingWorkItem.QC_Point.filter((point) => point._id.toString() !== qcPointId)
+    existingWorkItem.QC_Point = existingWorkItem.QC_Point.filter(
+      (point) => point._id.toString() !== qcPointId
+    );
+  }
+  if (taskId) {
+    // Find the task
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    if (taskIndex === -1) {
+      return res.status(404).json({
+        message: "Task's not found!",
+      });
+    }
+    existingWorkItem.tasks = existingWorkItem.tasks.filter(
+      (task) => task._id.toString() !== taskId
+    );
   }
   if (image && existingWorkItem.images.includes(image)) {
-    const oldImagePath = path.join(__dirname, "../uploads", image)
+    const oldImagePath = path.join(__dirname, "../uploads", image);
     if (fs.existsSync(oldImagePath)) {
-      fs.unlinkSync(oldImagePath)
+      fs.unlinkSync(oldImagePath);
     }
-    existingWorkItem.images = existingWorkItem.images.filter((img) => img !== image)
+    existingWorkItem.images = existingWorkItem.images.filter(
+      (img) => img !== image
+    );
   }
-  const currentDocument = existingWorkItem.documents.filter((doc) => doc._id.toString() === document)[0]
+  const currentDocument = existingWorkItem.documents.filter(
+    (doc) => doc._id.toString() === document
+  )[0];
   if (document && currentDocument) {
-    const oldDocumentPath = path.join(__dirname, "../uploads", currentDocument.title)
+    const oldDocumentPath = path.join(
+      __dirname,
+      "../uploads",
+      currentDocument.title
+    );
     if (fs.existsSync(oldDocumentPath)) {
-      fs.unlinkSync(oldDocumentPath)
+      fs.unlinkSync(oldDocumentPath);
     }
-    existingWorkItem.documents = existingWorkItem.documents.filter((doc) => doc._id.toString() !== document)
+    existingWorkItem.documents = existingWorkItem.documents.filter(
+      (doc) => doc._id.toString() !== document
+    );
   }
-  await existingWorkItem.save()
-  res.status(204).send()
-})
+  await existingWorkItem.save();
+  res.status(204).send();
+});
 module.exports = {
   addWorkDetailsItem,
   getAllWorkItems,
@@ -613,7 +662,7 @@ module.exports = {
   getWorkItemsForContract,
   getWorkItemsNameForContract,
   updateWorkItemDetails,
-  deleteWorkItemDetails
+  deleteWorkItemDetails,
 };
 
 // const deleteBoq = async (req, res) => {
