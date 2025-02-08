@@ -29,14 +29,10 @@ const productSchema = new mongoose.Schema(
       required: [true, "Uom is required"],
       trim: true,
     },
-    // category: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   required: true,
-    //   ref: "Category",
-    // },
     category: {
-      type: String,
-      required: [true, "Category is required"],
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Category",
     },
     price: {
       type: Number,

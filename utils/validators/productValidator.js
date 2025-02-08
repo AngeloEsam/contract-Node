@@ -26,13 +26,6 @@ exports.createProductValidator = [
         .withMessage("Name's too short. Minimum 3 characters required.")
         .isLength({ max: 64 })
         .withMessage("Name's too long. Maximum 64 characters allowed."),
-    check("slug")
-        .notEmpty()
-        .withMessage("Slug is required")
-        .isLowercase()
-        .withMessage("Slug must be lowercase.")
-        .isLength({ max: 64 })
-        .withMessage("Slug's length exceeds the limit of 64 characters."),
     check("category")
         .notEmpty()
         .withMessage("Category ID is required")

@@ -272,6 +272,9 @@ const updateProject = async (req, res) => {
       });
     }
     const updatedFields = req.body;
+    if (typeof updatedFields.teamMember === "string") {
+      updatedFields.teamMember = updatedFields.teamMember.split(",");
+    }
     Object.keys(updatedFields).forEach((key) => {
       project[key] = updatedFields[key];
     });

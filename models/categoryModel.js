@@ -4,7 +4,7 @@ const categorySchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
     name: {
         type: String,
-        requried: [true, "Name is required"]
+        required: [true, "Name is required"]
     },
     slug: {
         type: String,
