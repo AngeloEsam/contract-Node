@@ -40,6 +40,7 @@ const WorkItemSchema = new mongoose.Schema({
         default: "Low",
       },
       progress: { type: Number, default: 0 },
+      image: { type: String },
     },
   ],
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },

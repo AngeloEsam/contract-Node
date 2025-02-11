@@ -13,8 +13,9 @@ const {
   addSingleBoq,
   getWorkItemsForContract,
   getWorkItemsNameForContract,
+  createWorkItemDetails,
+  deleteWorkItemDetails,
   updateWorkItemDetails,
-  deleteWorkItemDetails
 } = require("../controllers/workItemController");
 const { auth } = require("../middlewares/auth");
 const excelStorage = multer.diskStorage({
@@ -49,7 +50,10 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     try {
-      if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("application/")) {
+      if (
+        file.mimetype.startsWith("image/") ||
+        file.mimetype.startsWith("application/")
+      ) {
         cb(null, true);
       } else {
         cb(new Error("Only image and document files are allowed!"), false);
@@ -61,7 +65,6 @@ const upload = multer({
 });
 const router = express.Router();
 
-
 // Multer field configuration
 const uploadFields = upload.fields([
   { name: "images", maxCount: 5 },
@@ -70,7 +73,12 @@ const uploadFields = upload.fields([
 
 router.post("/boq/:contractId", auth, addSingleBoq);
 router.post("/:userId", addWorkDetailsItem);
-router.post("/sheet/:contractId", auth, excelUpload.single("file"), insertSheet);
+router.post(
+  "/sheet/:contractId",
+  auth,
+  excelUpload.single("file"),
+  insertSheet
+);
 router.get("/", auth, getAllWorkItems);
 router.get("/:contractId", auth, getWorkItemsForContract);
 router.get("/names/:contractId", auth, getWorkItemsNameForContract);
@@ -78,8 +86,9 @@ router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
 router.delete("/:id", auth, deleteWork);
-router.put("/:id/details", auth, uploadFields, updateWorkItemDetails)
-router.delete("/:id/details", auth, uploadFields, deleteWorkItemDetails)
+router.post("/:id/details", auth, uploadFields, createWorkItemDetails);
+router.put("/:id/details", auth, upload.single("image"), updateWorkItemDetails);
+router.delete("/:id/details", auth, uploadFields, deleteWorkItemDetails);
 //router.delete("/boq/:contractId/:mainItemId", auth, deleteBoq);
 
 module.exports = router;

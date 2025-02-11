@@ -10,6 +10,7 @@ const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const materialModel = require("../models/materialModel");
 const asyncHandler = require("express-async-handler");
+const workItemModel = require("../models/workItemModel");
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -526,12 +527,11 @@ const getWorkItemsNameForContract = async (req, res) => {
     return res.status(400).json({ message: e.message });
   }
 };
-const updateWorkItemDetails = asyncHandler(async (req, res) => {
+const createWorkItemDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, passed, task } = req.body;
   const images = req.files?.images || [];
   const documents = req.files?.documents || [];
-  const { task: taskId, progress } = req.query;
   // Find the specific Work Item
   const existingWorkItem = await WorkItem.findById(id);
   if (!existingWorkItem) {
@@ -557,17 +557,43 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
     existingWorkItem.QC_Point.push({ title, passed });
   }
   if (task) {
-    if (!taskId) {
-      existingWorkItem.tasks.push({ ...task });
-    } else {
-      const taskIndex = existingWorkItem.tasks.findIndex(
-        (task) => task._id.toString() === taskId
-      );
-      if (taskIndex === -1) {
-        return res.status(404).json({ message: "Task not found!" });
+    existingWorkItem.tasks.push({ ...task });
+  }
+  // Save the updated work item
+  await existingWorkItem.save();
+
+  res.status(200).json({
+    message: "Work item updated successfully!",
+    data: existingWorkItem,
+  });
+});
+const updateWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params; // work item id
+  const image = req.file || "";
+  const { task } = req.body;
+  const { image: oldImageFilename, task: taskId, progress } = req.query;
+
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+  console.log("oldImageFilename: ", oldImageFilename)
+  console.log("image: ", image)
+  if (image) {
+    // Delete the old image from the server & DB
+    const oldImageIndex = existingWorkItem.images.indexOf(oldImageFilename);
+    if (oldImageIndex !== -1) {
+      // Delete the old image from the server
+      const oldImagePath = path.join(__dirname, "../uploads", oldImageFilename);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
       }
-      existingWorkItem.tasks[taskIndex] = { ...task };
+      // Delete the old image from the DB
+      existingWorkItem.images.splice(oldImageIndex, 1);
     }
+    // Add the new image to the DB
+    existingWorkItem.images.push(image.filename);
   }
   if (taskId && progress) {
     const taskIndex = existingWorkItem.tasks.findIndex(
@@ -578,9 +604,17 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
     }
     existingWorkItem.tasks[taskIndex].progress = Number(progress);
   }
-  // Save the updated work item
+  if (task && taskId) {
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    console.log("taskIndex: ", taskIndex);
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: "Task not found!" });
+    }
+    existingWorkItem.tasks[taskIndex] = { ...task };
+  }
   await existingWorkItem.save();
-
   res.status(200).json({
     message: "Work item updated successfully!",
     data: existingWorkItem,
@@ -661,6 +695,7 @@ module.exports = {
   addSingleBoq,
   getWorkItemsForContract,
   getWorkItemsNameForContract,
+  createWorkItemDetails,
   updateWorkItemDetails,
   deleteWorkItemDetails,
 };
