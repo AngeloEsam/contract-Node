@@ -578,8 +578,6 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
   if (!existingWorkItem) {
     return res.status(404).json({ message: "Work Item not found!" });
   }
-  console.log("oldImageFilename: ", oldImageFilename)
-  console.log("image: ", image)
   if (image) {
     // Delete the old image from the server & DB
     const oldImageIndex = existingWorkItem.images.indexOf(oldImageFilename);
