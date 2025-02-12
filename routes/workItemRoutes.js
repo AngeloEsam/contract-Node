@@ -18,6 +18,11 @@ const {
   updateWorkItemDetails,
 } = require("../controllers/workItemController");
 const { auth } = require("../middlewares/auth");
+const {
+  createWorkItemDetailsValidator,
+  updateWorkItemDetailsValidator,
+  deleteWorkItemDetailsValidator,
+} = require("../utils/validators/workItemDetails.validator");
 const excelStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../excelFiles");
@@ -86,9 +91,27 @@ router.get("/total/:userId", getWorkItemTotals);
 router.get("/:id", getSingleWorkItem);
 router.put("/:id", updateWorkItem);
 router.delete("/:id", auth, deleteWork);
-router.post("/:id/details", auth, uploadFields, createWorkItemDetails);
-router.put("/:id/details", auth, upload.single("image"), updateWorkItemDetails);
-router.delete("/:id/details", auth, uploadFields, deleteWorkItemDetails);
+router.post(
+  "/:id/details",
+  auth,
+  uploadFields,
+  createWorkItemDetailsValidator,
+  createWorkItemDetails
+);
+router.put(
+  "/:id/details",
+  auth,
+  upload.single("image"),
+  updateWorkItemDetailsValidator,
+  updateWorkItemDetails
+);
+router.delete(
+  "/:id/details",
+  auth,
+  uploadFields,
+  deleteWorkItemDetailsValidator,
+  deleteWorkItemDetails
+);
 //router.delete("/boq/:contractId/:mainItemId", auth, deleteBoq);
 
 module.exports = router;

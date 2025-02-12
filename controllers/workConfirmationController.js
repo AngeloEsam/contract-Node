@@ -168,6 +168,13 @@ const getSingleWorkConfirmation = async (req, res) => {
                 select: "firstName secondName email _id",
               },
             },
+            {
+              path: "comments",
+              populate: {
+                path: "userId",
+                select: "firstName secondName email _id",
+              },
+            },
           ],
         },
       },

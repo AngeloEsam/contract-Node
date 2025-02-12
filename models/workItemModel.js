@@ -43,6 +43,19 @@ const WorkItemSchema = new mongoose.Schema({
       image: { type: String },
     },
   ],
+  comments: [
+    {
+      content: String,
+      image: { type: String },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "User",
+      },
+      createdAt: { type: Date, default: Date.now() },
+      updatedAt: { type: Date },
+    },
+  ],
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
 });
 
