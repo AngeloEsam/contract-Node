@@ -108,7 +108,7 @@ const getAllProjects = async (req, res) => {
     let totalProjects;
     if (user.parentId == null) {
       projects = await Project.find({ userId })
-        .select("projectName projectManger status")
+        .select("projectName projectManger status contracts")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })

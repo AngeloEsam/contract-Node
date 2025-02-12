@@ -687,14 +687,17 @@ const getWorkConfirmationsByContractId = asyncHandler(async (req, res) => {
       path: "workItems",
       populate: {
         path: "workItemId",
-        populate: {
+        populate: [{
           path: "userId",
           select: "firstName secondName email usersGroup",
           populate: {
             path: "usersGroup",
             select: "firstName secondName id email",
           },
-        },
+        },{
+          path: "tasks",
+          populate: "assignee"
+        }],
       },
     });
   res.status(200).json(workConfirmations);
