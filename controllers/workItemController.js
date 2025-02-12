@@ -529,7 +529,7 @@ const getWorkItemsNameForContract = async (req, res) => {
 const createWorkItemDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, passed, task, comment } = req.body;
-  const { image } = req.query;
+  const { image: imageId } = req.query; // image id
   const images = req.files?.images || [];
   const documents = req.files?.documents || [];
   // Find the specific Work Item
@@ -551,7 +551,7 @@ const createWorkItemDetails = asyncHandler(async (req, res) => {
   // image
   if (images.length > 0) {
     images.map((image) => {
-      existingWorkItem.images.push(image.filename);
+      existingWorkItem.images.push({ filename: image.filename });
     });
   }
   // QC
@@ -559,12 +559,12 @@ const createWorkItemDetails = asyncHandler(async (req, res) => {
     existingWorkItem.QC_Point.push({ title, passed });
   }
   // Task
-  if (task) {
-    existingWorkItem.tasks.push({ ...task });
+  if (task && imageId) {
+    existingWorkItem.tasks.push({ ...task, image: imageId });
   }
   // Comment
-  if (comment && image) {
-    existingWorkItem.comments.push({ ...comment, image });
+  if (comment && imageId) {
+    existingWorkItem.comments.push({ ...comment, image: imageId });
   }
   // Save the updated work item
   await existingWorkItem.save();
@@ -579,7 +579,7 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
   const image = req.file || "";
   const { task, comment } = req.body;
   const {
-    image: oldImageFilename,
+    image: oldImageId,
     task: taskId,
     progress,
     comment: commentId,
@@ -591,20 +591,26 @@ const updateWorkItemDetails = asyncHandler(async (req, res) => {
   if (!existingWorkItem) {
     return res.status(404).json({ message: "Work Item not found!" });
   }
-  if (image) {
+  if (image && oldImageId) {
     // Delete the old image from the server & DB
-    const oldImageIndex = existingWorkItem.images.indexOf(oldImageFilename);
-    if (oldImageIndex !== -1) {
+    const oldImage = existingWorkItem.images.filter(
+      (image) => String(image._id) === oldImageId
+    )[0];
+    if (oldImage) {
       // Delete the old image from the server
-      const oldImagePath = path.join(__dirname, "../uploads", oldImageFilename);
+      const oldImagePath = path.join(
+        __dirname,
+        "../uploads",
+        oldImage.filename
+      );
       if (fs.existsSync(oldImagePath)) {
         fs.unlinkSync(oldImagePath);
       }
-      // Delete the old image from the DB
-      existingWorkItem.images.splice(oldImageIndex, 1);
+      oldImage.filename = image.filename;
+    } else {
+      // Add the new image to the DB
+      existingWorkItem.images.push({ filename: image.filename });
     }
-    // Add the new image to the DB
-    existingWorkItem.images.push(image.filename);
   }
   if (taskId && progress) {
     const taskIndex = existingWorkItem.tasks.findIndex(
@@ -647,7 +653,7 @@ const deleteWorkItemDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     qcPointId,
-    image,
+    image: imageId, // Image Id
     document,
     task: taskId,
     comment: commentId,
@@ -685,22 +691,25 @@ const deleteWorkItemDetails = asyncHandler(async (req, res) => {
       (task) => task._id.toString() !== taskId
     );
   }
-  if (image && existingWorkItem.images.includes(image)) {
-    const oldImagePath = path.join(__dirname, "../uploads", image);
+  const oldImage = existingWorkItem.images.filter(
+    (image) => String(image._id) === imageId
+  )[0];
+  if (imageId && oldImage) {
+    const oldImagePath = path.join(__dirname, "../uploads", oldImage.filename);
     if (fs.existsSync(oldImagePath)) {
       fs.unlinkSync(oldImagePath);
     }
     // Delete Image from DB
     existingWorkItem.images = existingWorkItem.images.filter(
-      (img) => img !== image
+      (img) => String(img._id) !== imageId
     );
     // Delete Image tasks
     existingWorkItem.tasks = existingWorkItem.tasks.filter(
-      (task) => task.image !== image
+      (task) => task.image !== imageId
     );
     // Delete Image comments
     existingWorkItem.comments = existingWorkItem.comments.filter(
-      (comment) => comment.image !== image
+      (comment) => comment.image !== imageId
     );
   }
   const currentDocument = existingWorkItem.documents.filter(

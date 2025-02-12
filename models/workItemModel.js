@@ -10,7 +10,7 @@ const WorkItemSchema = new mongoose.Schema({
       type: { type: String },
     },
   ],
-  images: [{ type: String, unique: true }],
+  images: [{ filename: String }],
   QC_Point: [
     {
       title: String,
