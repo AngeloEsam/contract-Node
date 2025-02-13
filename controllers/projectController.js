@@ -117,7 +117,7 @@ const getAllProjects = async (req, res) => {
     } else {
       parentUser = await User.findById(user.parentId);
       projects = await Project.find({ userId: parentUser._id })
-        .select("projectName projectManger status")
+        .select("projectName projectManger status contracts")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })

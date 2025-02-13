@@ -6,7 +6,7 @@ const dotenv = require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { OAuth2Client } = require("google-auth-library");
 const clientGoogle = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const CompanyProfile = require("../models/companyProfile.model")
+const CompanyProfile = require("../models/companyProfile.model");
 //regiser
 const register = async (req, res) => {
   const {
@@ -58,7 +58,12 @@ const register = async (req, res) => {
 
     await user.save();
     // Create Company Profile
-    await CompanyProfile.create({ companyName, companySize, companyType })
+    await CompanyProfile.create({
+      companyName,
+      companySize,
+      companyType,
+      userId: user._id,
+    });
     const token = jwt.sign(
       {
         _id: user._id,
@@ -245,7 +250,9 @@ const getSingleUser = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await User.findById(userId).select("-password").populate("usersGroup");
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("usersGroup");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
