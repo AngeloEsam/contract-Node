@@ -21,7 +21,14 @@ const register = async (req, res) => {
     companyType,
     phone,
   } = req.body;
-  if (!role || !email || !password || !confirmPassword || !phone) {
+  if (
+    !role ||
+    !email ||
+    !password ||
+    !confirmPassword ||
+    !phone ||
+    !companyName
+  ) {
     return res
       .status(400)
       .json({ message: "Please provide all required fields" });
@@ -57,6 +64,11 @@ const register = async (req, res) => {
     });
 
     await user.save();
+    // Check if company is already registered
+    const existingCompany = await CompanyProfile.findOne({ companyName });
+    if (existingCompany) {
+      return res.status(400).json({ message: "Company name is already used" });
+    }
     // Create Company Profile
     await CompanyProfile.create({
       companyName,
