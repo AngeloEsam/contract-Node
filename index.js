@@ -68,6 +68,7 @@ app.use("/api/categories", categoriesRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/companyProfile", companyProfileRoutes);
 app.use("/api/tasks", require("./routes/task.routes"));
+app.use("/api/quality-check", require("./routes/qualityCheck.routes"));
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));

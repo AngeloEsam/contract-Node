@@ -30,7 +30,6 @@ const TaskSchema = new Schema(
     },
     progress: { type: Number, default: 0 },
     image: String,
-    QC_Point: String,
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
