@@ -11,6 +11,7 @@ const { default: mongoose } = require("mongoose");
  * @access  User
  */
 exports.getAllQualityCheck = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
   let filterQueries = { ...req.query };
   const executedQueries = ["page", "limit", "sort", "field"];
   executedQueries.forEach((field) => delete filterQueries[field]);
@@ -21,18 +22,38 @@ exports.getAllQualityCheck = asyncHandler(async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  // Get the total number of Quality Checks based on filter queries
-  const totalQualityCheck = await QualityCheck.countDocuments(filterQueries);
-  const qualityChecks = await QualityCheck.find(filterQueries)
+  const qualityCheckItems = await QualityCheck.find({
+    submittedBy: { $in: userId },
+  });
+  const qualityChecks = await QualityCheck.find({
+    ...filterQueries,
+    submittedBy: { $in: userId },
+  })
     .skip(skip)
     .limit(limit)
-    .populate("tasks");
+    .populate([
+      "tasks",
+      { path: "projectId", select: "_id projectName" },
+      { path: "qualityEngineer", select: "_id firstName secondName" },
+    ]);
+  const inProgress = qualityCheckItems.filter(
+    (item) => Number(item.status) === 1
+  ).length;
+  const itp = qualityCheckItems.reduce(
+    (cp, cv) => Number(cp) + Number(cv.itp || 0),
+    0
+  );
+  const openIssues = qualityCheckItems.filter((item) => item.reviewedBy).length;
   res.status(200).json({
     skip,
     limit,
     page,
+    inProgress,
+    openIssues: openIssues,
+    averageItp: itp / qualityCheckItems.length,
+    totalQualityCheck: qualityCheckItems.length || 0,
     results: qualityChecks.length,
-    pages: Math.ceil(totalQualityCheck / limit),
+    pages: Math.ceil(qualityCheckItems.length / limit),
     qualityChecks: qualityChecks,
   });
 });
