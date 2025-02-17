@@ -22,8 +22,14 @@ router
   .get(auth, getAllQualityCheckValidator, getAllQualityCheck)
   .post(
     auth,
+    upload.fields([{ name: "attachments", maxCount: 10 }]),
     createQualityCheckValidator,
-    upload.array("attachments"),
+    (req, res, next) => {
+      if (req.body.tasks) {
+        req.body.tasks = JSON.parse(req.body.tasks); // تحليل tasks إلى array
+      }
+      next();
+    },
     createQualityCheck
   );
 
@@ -31,8 +37,8 @@ router
   .route("/:id")
   .put(
     auth,
+    upload.fields([{ name: "attachments", maxCount: 10 }]),
     updateQualityCheckValidator,
-    upload.array("attachments"),
     updateQualityCheck
   )
   .delete(auth, deleteQualityCheckValidator, deleteQualityCheck);

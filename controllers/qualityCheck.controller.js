@@ -5,6 +5,7 @@ const ApiError = require("../utils/ApiError");
 const path = require("path");
 const fs = require("fs");
 const { default: mongoose } = require("mongoose");
+const Image = require("../models/image.model");
 /**
  * @desc    Get all the quality checks
  * @route   GET  /api/qualityCheck/
@@ -83,9 +84,19 @@ exports.createQualityCheck = asyncHandler(async (req, res) => {
       tasks,
     } = req.body;
 
-    const attachments = req.files
-      ? req.files.map((file) => ({ filename: file.filename }))
+    const attachmentsArr = req.files.attachments
+      ? req.files.attachments.map((file) => ({
+          filename: file.filename,
+          type: file.mimetype,
+          size: file.size,
+        }))
       : [];
+
+    let attachments = [];
+    if (attachmentsArr.length > 0) {
+      attachments = await Image.insertMany(attachmentsArr);
+    }
+
     const userId = req.user?._id;
 
     if (!userId) {
@@ -102,7 +113,6 @@ exports.createQualityCheck = asyncHandler(async (req, res) => {
           task.assignee = task.assignee.split(",")[1].trim();
           // Validate ObjectId
           if (!mongoose.Types.ObjectId.isValid(task.assignee)) {
-            console.error(`Invalid ObjectId: ${task.name}`);
             throw new Error(`Invalid ObjectId: ${task.name}`);
           }
         }

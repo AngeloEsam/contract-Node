@@ -17,7 +17,19 @@ exports.createQualityCheckValidator = [
     .isMongoId()
     .withMessage("Invalid projectId"),
   check("workItemId").optional().isMongoId().withMessage("Invalid workItemId"),
-  check("tasks").optional().isArray().withMessage("tasks must be an array"),
+  check("tasks")
+    .optional()
+    .isString() // تأكد من أن tasks هي سلسلة (JSON string)
+    .withMessage("tasks must be a JSON string")
+    .custom((value) => {
+      try {
+        const parsedValue = JSON.parse(value); // تحليل tasks من JSON string إلى array
+        return Array.isArray(parsedValue); // التأكد من أن القيمة مصفوفة
+      } catch (error) {
+        return false; // إذا فشل التحليل، يتم اعتبار القيمة غير صالحة
+      }
+    })
+    .withMessage("tasks must be a valid array"),
   check("assignedTo")
     .optional()
     .isMongoId()
