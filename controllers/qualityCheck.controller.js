@@ -33,9 +33,13 @@ exports.getAllQualityCheck = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(limit)
     .populate([
-      "tasks",
+      {
+        path: "tasks",
+        populate: { path: "assignee", select: "_id firstName secondName" },
+      },
       { path: "projectId", select: "_id projectName" },
       { path: "qualityEngineer", select: "_id firstName secondName" },
+      { path: "attachments" },
     ]);
   const inProgress = qualityCheckItems.filter(
     (item) => Number(item.status) === 1
@@ -89,6 +93,7 @@ exports.createQualityCheck = asyncHandler(async (req, res) => {
           filename: file.filename,
           type: file.mimetype,
           size: file.size,
+          workItemId,
         }))
       : [];
 
@@ -96,7 +101,6 @@ exports.createQualityCheck = asyncHandler(async (req, res) => {
     if (attachmentsArr.length > 0) {
       attachments = await Image.insertMany(attachmentsArr);
     }
-
     const userId = req.user?._id;
 
     if (!userId) {
@@ -139,13 +143,12 @@ exports.createQualityCheck = asyncHandler(async (req, res) => {
       note,
       description,
       managerFeedback,
-      attachments,
+      attachments: attachments.map((attachment) => attachment._id),
       tasks: createdTasks.map((task) => task._id),
     });
 
     res.status(201).json(qualityCheck);
   } catch (error) {
-    console.error("Error creating QualityCheck:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -160,10 +163,9 @@ exports.updateQualityCheck = asyncHandler(async (req, res) => {
   let {
     isDraft,
     status,
-    noteRelation,
-    contractId,
-    projectId,
     workItemId,
+    oldAttachments,
+    noteRelation,
     correctionStatus,
     category,
     repeatedIssue,
@@ -175,38 +177,72 @@ exports.updateQualityCheck = asyncHandler(async (req, res) => {
     managerFeedback,
     tasks,
   } = req.body;
-  const attachments =
-    req.files && Array.isArray(req.files)
-      ? req.files.map((file) => ({ filename: file.filename }))
+
+  const oldQualityCheck = await QualityCheck.findById(id).populate(
+    "attachments"
+  );
+  if (!oldQualityCheck) throw new ApiError("Quality Check not found!");
+
+  const receivedAttachments =
+    req.files && req.files.attachments && req.files.attachments.length > 0
+      ? req.files.attachments.map((file) => ({
+          filename: file.filename,
+          type: file.mimetype,
+          size: file.size,
+        }))
       : [];
-  const qualityCheck = await QualityCheck.findById(id);
-  if (!qualityCheck) throw new ApiError("Quality Check not found!");
-  let updatedTasks = qualityCheck.tasks;
-  tasks = tasks.map((task) => (task.assignee = task.assignee.split(",")[1]));
-  if (tasks && tasks.length > 0) {
-    tasks = tasks.map((task) => {
-      if (task.assignee) {
-        task.assignee = task.assignee.split(",")[1].trim();
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(task.assignee)) {
-          console.error(`Invalid ObjectId: ${task.name}`);
-          throw new Error(`Invalid ObjectId: ${task.name}`);
+  const oldAttachmentFilenames = oldQualityCheck.attachments.map(
+    (item) => item.filename
+  );
+  const deletedAttachments = oldAttachmentFilenames.filter(
+    (filename) => !oldAttachments.includes(filename)
+  );
+
+  if (deletedAttachments.length > 0) {
+    await Promise.all(
+      deletedAttachments.map(async (filename) => {
+        const oldAttachmentPath = path.join(__dirname, "../uploads", filename);
+
+        if (fs.existsSync(oldAttachmentPath)) {
+          fs.unlinkSync(oldAttachmentPath);
         }
-      }
-      return task;
-    });
-    const newTasks = await Task.insertMany(tasks);
-    updatedTasks = [...updatedTasks, ...newTasks.map((task) => task._id)];
+
+        await Image.findOneAndDelete({ filename });
+      })
+    );
   }
+
+  const newAttachments =
+    receivedAttachments.length > 0
+      ? await Image.insertMany(receivedAttachments)
+      : [];
+
+  const allAttachments = [
+    ...oldQualityCheck.attachments.filter((item) =>
+      oldAttachments.includes(item.filename)
+    ),
+    ...newAttachments,
+  ];
+  const updatedTasks = [];
+
+  for (const task of tasks) {
+    const existingTask = await Task.findById(task._id);
+
+    if (existingTask) {
+      await Task.updateOne({ _id: task._id }, task);
+      updatedTasks.push(existingTask._id);
+    } else {
+      const newTask = await Task.create(task);
+      updatedTasks.push(newTask._id);
+    }
+  }
+
   const updatedQualityCheck = await QualityCheck.findByIdAndUpdate(
     id,
     {
       isDraft,
       status,
       noteRelation,
-      contractId,
-      projectId,
-      workItemId,
       correctionStatus,
       category,
       repeatedIssue,
@@ -216,30 +252,40 @@ exports.updateQualityCheck = asyncHandler(async (req, res) => {
       note,
       description,
       managerFeedback,
-      attachments,
-      tasks: updatedTasks.map((task) => task._id),
+      attachments: allAttachments.map((item) => item._id),
+      tasks: updatedTasks,
     },
     { new: true }
   );
+
   res.status(200).json(updatedQualityCheck);
 });
 /**
  * @desc    Delete a Quality Check
- * @route   DELETE  /api/qualityCheck/
+ * @route   DELETE  /api/qualityCheck/:id
  * @access  User
  */
 exports.deleteQualityCheck = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const currentQualityCheck = await QualityCheck.findById(id);
-  if (!currentQualityCheck) throw new ApiError("Quality Check not found!");
-  if (currentQualityCheck.tasks && currentQualityCheck.tasks.length) {
+  const currentQualityCheck = await QualityCheck.findById(id).populate(
+    "attachments"
+  );
+
+  if (!currentQualityCheck) {
+    throw new ApiError("Quality Check not found!", 404);
+  }
+
+  if (currentQualityCheck.tasks?.length > 0) {
     await Task.deleteMany({ _id: { $in: currentQualityCheck.tasks } });
   }
-  if (
-    currentQualityCheck.attachments &&
-    currentQualityCheck.attachments.length > 0
-  ) {
-    currentQualityCheck.attachments.map((attachment) => {
+
+  if (currentQualityCheck.attachments?.length > 0) {
+    currentQualityCheck.attachments.forEach((attachment) => {
+      if (!attachment.filename) {
+        console.warn("Attachment missing filename:", attachment._id);
+        return;
+      }
+
       const attachmentPath = path.join(
         __dirname,
         "../uploads",
@@ -249,7 +295,13 @@ exports.deleteQualityCheck = asyncHandler(async (req, res) => {
         fs.unlinkSync(attachmentPath);
       }
     });
+
+    await Image.deleteMany({
+      _id: { $in: currentQualityCheck.attachments.map((a) => a._id) },
+    });
   }
+
   await QualityCheck.findByIdAndDelete(id);
+
   res.status(204).send();
 });

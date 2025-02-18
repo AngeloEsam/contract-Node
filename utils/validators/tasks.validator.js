@@ -47,10 +47,7 @@ exports.addTaskValidation = [
     .isInt({ min: 0, max: 100 })
     .withMessage("Progress must be an integer between 0 and 100"),
   body("image").optional().isString().withMessage("Image must be a string"),
-  //   body("QC_Point")
-  //     .optional()
-  //     .isString()
-  //     .withMessage("QC_Point must be a string"),
+
   body("workItemId")
     .notEmpty()
     .withMessage("Work item ID is required")

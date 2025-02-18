@@ -26,7 +26,7 @@ router
     createQualityCheckValidator,
     (req, res, next) => {
       if (req.body.tasks) {
-        req.body.tasks = JSON.parse(req.body.tasks); // تحليل tasks إلى array
+        req.body.tasks = JSON.parse(req.body.tasks);
       }
       next();
     },
@@ -39,6 +39,12 @@ router
     auth,
     upload.fields([{ name: "attachments", maxCount: 10 }]),
     updateQualityCheckValidator,
+    (req, res, next) => {
+      if (req.body.tasks) {
+        req.body.tasks = JSON.parse(req.body.tasks);
+      }
+      next();
+    },
     updateQualityCheck
   )
   .delete(auth, deleteQualityCheckValidator, deleteQualityCheck);

@@ -19,14 +19,14 @@ exports.createQualityCheckValidator = [
   check("workItemId").optional().isMongoId().withMessage("Invalid workItemId"),
   check("tasks")
     .optional()
-    .isString() // تأكد من أن tasks هي سلسلة (JSON string)
+    .isString()
     .withMessage("tasks must be a JSON string")
     .custom((value) => {
       try {
-        const parsedValue = JSON.parse(value); // تحليل tasks من JSON string إلى array
-        return Array.isArray(parsedValue); // التأكد من أن القيمة مصفوفة
+        const parsedValue = JSON.parse(value);
+        return Array.isArray(parsedValue);
       } catch (error) {
-        return false; // إذا فشل التحليل، يتم اعتبار القيمة غير صالحة
+        return false;
       }
     })
     .withMessage("tasks must be a valid array"),
@@ -69,18 +69,6 @@ exports.updateQualityCheckValidator = [
     .optional()
     .isBoolean()
     .withMessage("isDraft must be a boolean"),
-  check("contractId")
-    .notEmpty()
-    .withMessage("contractId is required")
-    .isMongoId()
-    .withMessage("Invalid contractId"),
-  check("projectId")
-    .notEmpty()
-    .withMessage("projectId is required")
-    .isMongoId()
-    .withMessage("Invalid projectId"),
-  check("workItemId").optional().isMongoId().withMessage("Invalid workItemId"),
-  check("tasks").optional().isArray().withMessage("tasks must be an array"),
   check("assignedTo")
     .optional()
     .isMongoId()
@@ -99,6 +87,19 @@ exports.updateQualityCheckValidator = [
     .optional()
     .isString()
     .withMessage("managerFeedback must be a string"),
+  check("tasks")
+    .optional()
+    .isString()
+    .withMessage("tasks must be a JSON string")
+    .custom((value) => {
+      try {
+        const parsedValue = JSON.parse(value);
+        return Array.isArray(parsedValue);
+      } catch (error) {
+        return false;
+      }
+    })
+    .withMessage("tasks must be a valid array"),
   validatorMiddleware,
 ];
 

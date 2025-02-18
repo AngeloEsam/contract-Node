@@ -41,7 +41,8 @@ const QualityCheck = new Schema({
   managerFeedback: { type: String },
   attachments: [
     {
-      filename: String,
+      type: mongoose.Types.ObjectId,
+      ref: "Image",
     },
   ],
   tasks: [
