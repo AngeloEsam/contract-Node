@@ -19,11 +19,16 @@ const estimatorRoutes = require("./routes/estimatorRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const categoriesRoutes = require("./routes/categoriesRoute");
 const productsRoutes = require("./routes/productRoute");
+const companyProfileRoutes = require("./routes/companyProfile.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const globalErrorHandlerMiddleware = require("./middlewares/globalErrorHandlerMiddleware");
+const ApiError = require("./utils/ApiError");
 const app = express();
 const port = process.env.PORT || 5001;
+// Connect to DB
 connectDB();
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -33,12 +38,16 @@ app.use(
       "https://whale-app-bpeim.ondigitalocean.app",
       "http://localhost:5173",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Access-Control-Allow-Origin",
+    ],
   })
 );
-
+// Routes
 app.use("/api/auth", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/partners", partnerRoutes);
@@ -57,10 +66,35 @@ app.use("/api/estimators", estimatorRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/products", productsRoutes);
+app.use("/api/companyProfile", companyProfileRoutes);
+app.use("/api/tasks", require("./routes/task.routes"));
+app.use("/api/quality-check", require("./routes/qualityCheck.routes"));
+app.use("/api/images", require("./routes/image.routes"));
 //statics
 app.use("/excelFiles", express.static("excelFiles"));
 app.use("/projectImages", express.static("projectImages"));
 app.use("/partnerImages", express.static("partnerImages"));
-app.listen(port, () => {
+app.use("/companyProfileImages", express.static("companyProfileImages"));
+app.use("/uploads", express.static("uploads"));
+app.get("/download/:filename", (req, res) => {
+  const filePath = `uploads/${req.params.filename}`;
+  res.download(filePath);
+});
+app.use("*", (req, res, next) => {
+  next(new ApiError(`Can't find this route ${req.originalUrl}`, 400));
+});
+
+// Global error handle
+app.use(globalErrorHandlerMiddleware);
+
+// Listen
+const server = app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
+});
+
+// Handle rejection errors
+
+process.on("unhandledRejection", (err, promise) => {
+  console.error(`Unhandled rejection at: ${promise}, ${err.stack}`);
+  server.close(() => process.exit(1));
 });

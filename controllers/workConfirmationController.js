@@ -1,7 +1,11 @@
+const path = require("path");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const WorkConfirmation = require("../models/workConfirmationModel");
 const workItemModel = require("../models/workItemModel");
+const asyncHandler = require("express-async-handler");
+const fs = require("fs");
+const { populate } = require("../models/userModel");
 
 const getWorkItemsForSpecificContract = async (contractId) => {
   const contract = await Contract.findById(contractId).populate({
@@ -36,6 +40,7 @@ const createWorkConfirmation = async (req, res) => {
       workConfirmationType,
       completionPercentage,
       activateInvoicingByPercentage,
+      negativeActive,
       status,
       projectName,
       partner,
@@ -74,6 +79,7 @@ const createWorkConfirmation = async (req, res) => {
       endDate,
       workConfirmationType,
       completionPercentage,
+      negativeActive,
       activateInvoicingByPercentage,
       status,
       projectName,
@@ -135,23 +141,51 @@ const getSingleWorkConfirmation = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const skip = (page - 1) * limit;
   try {
-    const workConfirmation = await WorkConfirmation.findOne({
-      _id: id,
-      userId,
-    })
-      .populate({
+    const populateOptions = [
+      {
         path: "contractId",
-        select: "code totalContractValue",
-      })
-      .populate({
+        select:
+          "code totalContractValue businessGuarantee taxRate taxValue consultant endDate startDate downPaymentRate downPaymentValue",
+        populate: { path: "consultant" },
+      },
+      {
         path: "workItems",
         populate: {
           path: "workItemId",
-          select: "workDetails workItemName _id",
+          populate: [
+            {
+              path: "userId",
+              select: "firstName secondName email usersGroup",
+              populate: {
+                path: "usersGroup",
+                select: "firstName secondName id email",
+              },
+            },
+            {
+              path: "tasks",
+              populate: {
+                path: "assignee",
+                select: "firstName secondName email _id",
+              },
+            },
+            {
+              path: "comments",
+              populate: {
+                path: "userId",
+                select: "firstName secondName email _id",
+              },
+            },
+          ],
         },
-      })
-      .populate("projectName", "projectName")
-      .populate("partner", "partnerName ");
+      },
+      { path: "projectName", select: "projectName" },
+      { path: "partner", select: "partnerName" },
+    ];
+    const workConfirmation = await WorkConfirmation.findOne({
+      _id: id,
+      userId,
+    }).populate(populateOptions);
+
     if (!workConfirmation) {
       return res
         .status(404)
@@ -185,7 +219,6 @@ const getSingleWorkConfirmation = async (req, res) => {
       })
       .filter(Boolean);
     const paginatedWorkItems = workItems.slice(skip, skip + limit);
-
     res.status(200).json({
       data: {
         ...workConfirmation.toObject(),
@@ -240,6 +273,7 @@ const updateWorkConfirmation = async (req, res) => {
       workConfirmationType,
       activateInvoicingByPercentage,
       completionPercentage,
+      negativeActive,
     } = req.body;
     const userId = req.user._id;
 
@@ -263,6 +297,7 @@ const updateWorkConfirmation = async (req, res) => {
         workConfirmationType,
         activateInvoicingByPercentage,
         completionPercentage,
+        negativeActive,
       },
       { new: true }
     );
@@ -317,7 +352,11 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
         message: "Work Item has already been calculated before!",
       });
     }
-
+    if (!currentQuantity) {
+      return res.status(400).json({
+        message: "Current Work QTY is required",
+      });
+    }
     // Calculate updated quantities
     const updatedTotalQuantity =
       currentWorkItem.previousQuantity + currentQuantity;
@@ -387,6 +426,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     existingWorkConfirmation.workItems[workItemIndex].isCalculated = true;
     existingWorkConfirmation.totalAmount += totalAmount;
     existingWorkConfirmation.dueAmount += calculatedDueAmount;
+    existingWorkConfirmation.workItems[workItemIndex].lastProgress = Date.now();
     // Save the updated Work Confirmation
     await existingWorkConfirmation.save();
 
@@ -398,6 +438,7 @@ const updateWorkConfirmationBaseOnWorkItem = async (req, res) => {
     res.status(500).json({
       message: "Error updating Work Confirmation",
       error: error.message,
+      stack: error.stack,
     });
   }
 };
@@ -617,6 +658,50 @@ const searchWorkConfirmation = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// Get Work Confirmation by Project Id
+const getWorkConfirmationByProjectId = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const workConfirmation = await WorkConfirmation.find({
+    projectName: projectId,
+  })
+    .populate(["contractId", "projectName", "partner"])
+    .limit(limit)
+    .skip(skip);
+  const totalPages = Math.ceil(workConfirmation.length / limit);
+  res.status(200).json({
+    workConfirmation,
+    totalPages,
+    currentPage: page,
+  });
+});
+const getWorkConfirmationsByContractId = asyncHandler(async (req, res) => {
+  const { contractId } = req.params;
+  const workConfirmations = await WorkConfirmation.find({
+    contractId: { $in: contractId },
+  })
+    .populate("contractId")
+    .populate({
+      path: "workItems",
+      populate: {
+        path: "workItemId",
+        populate: [{
+          path: "userId",
+          select: "firstName secondName email usersGroup",
+          populate: {
+            path: "usersGroup",
+            select: "firstName secondName id email",
+          },
+        },{
+          path: "tasks",
+          populate: "assignee"
+        }],
+      },
+    });
+  res.status(200).json(workConfirmations);
+});
 // const searchWorkConfirmation = async (req, res) => {
 //   try {
 //     const { projectName, partnerName, status, contractId } = req.query;
@@ -742,4 +827,6 @@ module.exports = {
   updateWorkConfirmationBaseOnWorkItem,
   searchByWorkItemName,
   searchWorkConfirmation,
+  getWorkConfirmationByProjectId,
+  getWorkConfirmationsByContractId,
 };

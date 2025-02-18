@@ -74,8 +74,8 @@ const getUserProjects = async (req, res) => {
   try {
     const { _id } = req.user;
     const projects = await Project.find({ userId: _id }).select(
-      "projectName id"
-    );
+      "projectName id contracts"
+    ).populate("contracts");
     if (!projects) {
       return res
         .status(404)
@@ -108,7 +108,7 @@ const getAllProjects = async (req, res) => {
     let totalProjects;
     if (user.parentId == null) {
       projects = await Project.find({ userId })
-        .select("projectName projectManger status")
+        .select("projectName projectManger status contracts")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -117,7 +117,7 @@ const getAllProjects = async (req, res) => {
     } else {
       parentUser = await User.findById(user.parentId);
       projects = await Project.find({ userId: parentUser._id })
-        .select("projectName projectManger status")
+        .select("projectName projectManger status contracts")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -236,7 +236,13 @@ const getSingleProject = async (req, res) => {
   const { _id } = req.user;
 
   try {
-    const project = await Project.findOne({ _id: projectId, userId: _id });
+    const project = await Project.findOne({ _id: projectId, userId: _id }).populate({
+      path: "contracts",
+      populate: [
+        { path: 'partner', select: 'partnerName' },
+        { path: 'project', select: 'projectName' },
+      ],
+    });
     if (!project) {
       return res.status(404).json({
         message: "Project not found or you're not authorized to view it",
@@ -266,6 +272,9 @@ const updateProject = async (req, res) => {
       });
     }
     const updatedFields = req.body;
+    if (typeof updatedFields.teamMember === "string") {
+      updatedFields.teamMember = updatedFields.teamMember.split(",");
+    }
     Object.keys(updatedFields).forEach((key) => {
       project[key] = updatedFields[key];
     });
@@ -346,8 +355,8 @@ const getProjectStatusSummary = async (req, res) => {
 
     const precentage =
       projectsForUserCompleted +
-        projectsForUserPlanning +
-        projectsForUserProgress || 1;
+      projectsForUserPlanning +
+      projectsForUserProgress || 1;
 
     const countStatus = [
       {

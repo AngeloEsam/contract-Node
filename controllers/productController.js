@@ -66,17 +66,12 @@ const postProduct = async (req, res, next) => {
       !description ||
       !uom
     ) {
-      return next(new ApiError("All fields are required", 400));
+      return res.status(400).json({ message: "All fields are required" });
     }
-    // const findCategory = await CategoryModel.findOne({ name: category });
-    // if (!findCategory) {
-    //   return next(new ApiError("Category not found", 404));
-    // }
     const product = await Product.create({
       sku,
       name,
       slug: slugify(name, { lower: true }),
-      //category: findCategory._id,
       category,
       price,
       quantity,
@@ -102,13 +97,13 @@ const getProduct = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return next(new ApiError("Invalid product ID", 400));
+      return res.status(400).json({ message: "Invalid product ID" });
     }
 
     const product = await Product.findById(id);
 
     if (!product) {
-      return next(new ApiError("Product not found", 404));
+      return res.status(404).json({ message: "Product not found" });
     }
 
     res.status(200).json(product);
@@ -129,7 +124,7 @@ const updateProduct = async (req, res, next) => {
       req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return next(new ApiError("Invalid product ID", 400));
+      return res.status(400).json({ message: "Invalid product ID" });
     }
 
     const updateFields = {};
@@ -147,7 +142,7 @@ const updateProduct = async (req, res, next) => {
     });
 
     if (!product) {
-      return next(new ApiError("Product not found", 404));
+      return res.status(404).json({ message: "Product not found" });
     }
 
     res.status(200).json(product);
@@ -166,13 +161,13 @@ const deleteProduct = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return next(new ApiError("Invalid product ID", 400));
+      return res.status(400).json({ message: "Invalid product ID" });
     }
 
     const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
-      return next(new ApiError("Product not found", 404));
+      return res.status(404).json({ message: "Product not found" });
     }
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {

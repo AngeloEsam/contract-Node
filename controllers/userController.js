@@ -6,6 +6,7 @@ const dotenv = require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { OAuth2Client } = require("google-auth-library");
 const clientGoogle = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const CompanyProfile = require("../models/companyProfile.model");
 //regiser
 const register = async (req, res) => {
   const {
@@ -20,7 +21,14 @@ const register = async (req, res) => {
     companyType,
     phone,
   } = req.body;
-  if (!role || !email || !password || !confirmPassword || !phone) {
+  if (
+    !role ||
+    !email ||
+    !password ||
+    !confirmPassword ||
+    !phone ||
+    !companyName
+  ) {
     return res
       .status(400)
       .json({ message: "Please provide all required fields" });
@@ -56,6 +64,18 @@ const register = async (req, res) => {
     });
 
     await user.save();
+    // Check if company is already registered
+    const existingCompany = await CompanyProfile.findOne({ companyName });
+    if (existingCompany) {
+      return res.status(400).json({ message: "Company name is already used" });
+    }
+    // Create Company Profile
+    await CompanyProfile.create({
+      companyName,
+      companySize,
+      companyType,
+      userId: user._id,
+    });
     const token = jwt.sign(
       {
         _id: user._id,
@@ -114,7 +134,6 @@ const login = async (req, res) => {
       process.env.SECRET_KEY,
       { expiresIn: "2d" }
     );
-
     res
       .cookie("jwtContracting", token, {
         httpOnly: process.env.NODE_ENV === "production",
@@ -243,7 +262,9 @@ const getSingleUser = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("usersGroup");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

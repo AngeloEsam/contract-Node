@@ -9,6 +9,7 @@ const deductionModel = require("../models/deductionModel");
 const Contract = require("../models/contractModel");
 const workConfirmationModel = require("../models/workConfirmationModel");
 const materialModel = require("../models/materialModel");
+const asyncHandler = require("express-async-handler");
 
 const addWorkDetailsItem = async (req, res) => {
   const { userId } = req.params;
@@ -17,13 +18,13 @@ const addWorkDetailsItem = async (req, res) => {
       subId,
       unitOfMeasure,
       assignedQuantity,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
       price,
       workItemName,
     } = req.body;
-
     const total = assignedQuantity * price;
     const subItem = await subItemModel.findById(subId);
     if (!subItem) {
@@ -34,9 +35,10 @@ const addWorkDetailsItem = async (req, res) => {
       workDetails: {
         unitOfMeasure,
         assignedQuantity,
-        previousQuantity,
-        remainingQuantity,
-        financialCategory,
+        startDate,
+        endDate,
+        notes,
+        workItemType,
         price,
         total,
       },
@@ -170,16 +172,21 @@ const updateWorkItem = async (req, res) => {
     const {
       unitOfMeasure,
       assignedQuantity,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
       price,
       workItemName,
     } = req.body;
-    const newAssignedQuantity = assignedQuantity || data.workDetails.assignedQuantity;
+    const newAssignedQuantity =
+      assignedQuantity || data.workDetails.assignedQuantity;
     const newPrice = price || data.workDetails.price;
 
-    const total = newAssignedQuantity && newPrice ? newAssignedQuantity * newPrice : data.workDetails.total;
+    const total =
+      newAssignedQuantity && newPrice
+        ? newAssignedQuantity * newPrice
+        : data.workDetails.total;
 
     const updateWorkDetailsItem = await WorkItem.findByIdAndUpdate(
       id,
@@ -188,12 +195,13 @@ const updateWorkItem = async (req, res) => {
         workDetails: {
           unitOfMeasure: unitOfMeasure || data.workDetails.unitOfMeasure,
           assignedQuantity: newAssignedQuantity,
-          previousQuantity: previousQuantity || data.workDetails.previousQuantity,
-          remainingQuantity: remainingQuantity || data.workDetails.remainingQuantity,
-          financialCategory: financialCategory || data.workDetails.financialCategory,
-          price: newPrice,
-          total, 
+          startDate: startDate || data.workDetails.startDate,
+          endDate: endDate || data.workDetails.endDate,
+          notes: notes || data.workDetails.notes,
+          workItemType: workItemType || data.workDetails.workItemType,
         },
+        price: newPrice,
+        total,
       },
       {
         new: true,
@@ -215,7 +223,6 @@ const updateWorkItem = async (req, res) => {
     });
   }
 };
-
 
 const deleteWork = async (req, res) => {
   try {
@@ -382,11 +389,12 @@ const addSingleBoq = async (req, res) => {
     const {
       workItemName,
       unitOfMeasure,
-      previousQuantity,
-      remainingQuantity,
-      financialCategory,
       itemName,
       subItemName,
+      startDate,
+      endDate,
+      notes,
+      workItemType,
     } = req.body;
 
     let total = assignedQuantity * price;
@@ -424,10 +432,11 @@ const addSingleBoq = async (req, res) => {
       workItemName,
       workDetails: {
         unitOfMeasure,
+        startDate,
+        endDate,
+        notes,
+        workItemType,
         assignedQuantity,
-        previousQuantity,
-        remainingQuantity,
-        financialCategory,
         price,
         total,
       },
@@ -517,6 +526,222 @@ const getWorkItemsNameForContract = async (req, res) => {
     return res.status(400).json({ message: e.message });
   }
 };
+const createWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, passed, task, comment } = req.body;
+  const { image: imageId } = req.query; // image id
+  const images = req.files?.images || [];
+  const documents = req.files?.documents || [];
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+  // document
+  if (documents.length > 0) {
+    documents.forEach((doc) => {
+      const documentObject = {
+        title: doc?.filename,
+        size: Number(doc?.size),
+        type: doc?.mimetype,
+      };
+      existingWorkItem.documents.push(documentObject);
+    });
+  }
+  // image
+  if (images.length > 0) {
+    images.map((image) => {
+      existingWorkItem.images.push({ filename: image.filename });
+    });
+  }
+  // QC
+  if (title && passed) {
+    existingWorkItem.QC_Point.push({ title, passed });
+  }
+  // Task
+  if (task && imageId) {
+    existingWorkItem.tasks.push({ ...task, image: imageId });
+  }
+  // Comment
+  if (comment && imageId) {
+    existingWorkItem.comments.push({ ...comment, image: imageId });
+  }
+  // Save the updated work item
+  await existingWorkItem.save();
+
+  res.status(200).json({
+    message: "Work item updated successfully!",
+    data: existingWorkItem,
+  });
+});
+const updateWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params; // work item id
+  const image = req.file || "";
+  const { task, comment } = req.body;
+  const {
+    image: oldImageId,
+    task: taskId,
+    progress,
+    comment: commentId,
+    image: imageComment,
+  } = req.query;
+
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+  if (image && oldImageId) {
+    // Delete the old image from the server & DB
+    const oldImage = existingWorkItem.images.filter(
+      (image) => String(image._id) === oldImageId
+    )[0];
+    if (oldImage) {
+      // Delete the old image from the server
+      const oldImagePath = path.join(
+        __dirname,
+        "../uploads",
+        oldImage.filename
+      );
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+      oldImage.filename = image.filename;
+    } else {
+      // Add the new image to the DB
+      existingWorkItem.images.push({ filename: image.filename });
+    }
+  }
+  if (taskId && progress) {
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: "Task not found!" });
+    }
+    existingWorkItem.tasks[taskIndex].progress = Number(progress);
+  }
+  if (task && taskId) {
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    console.log("taskIndex: ", taskIndex);
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: "Task not found!" });
+    }
+    existingWorkItem.tasks[taskIndex] = { ...task };
+  }
+  if (comment && commentId && imageComment) {
+    const commentIndex = existingWorkItem.comments.findIndex(
+      (comment) => String(comment._id) === commentId
+    );
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: "Comment not found!" });
+    }
+    existingWorkItem.comments[commentIndex] = {
+      ...comment,
+      image: imageComment,
+    };
+  }
+  await existingWorkItem.save();
+  res.status(200).json({
+    message: "Work item updated successfully!",
+    data: existingWorkItem,
+  });
+});
+const deleteWorkItemDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    qcPointId,
+    image: imageId, // Image Id
+    document,
+    task: taskId,
+    comment: commentId,
+  } = req.query;
+  // Find the specific Work Item
+  const existingWorkItem = await WorkItem.findById(id);
+  if (!existingWorkItem) {
+    return res.status(404).json({ message: "Work Item not found!" });
+  }
+  if (qcPointId) {
+    // Find the QC_Point
+    const qcPointIndex = existingWorkItem.QC_Point.findIndex(
+      (point) => point._id.toString() === qcPointId
+    );
+    if (qcPointIndex === -1) {
+      return res.status(404).json({
+        message: "QC Point not found!",
+      });
+    }
+    existingWorkItem.QC_Point = existingWorkItem.QC_Point.filter(
+      (point) => point._id.toString() !== qcPointId
+    );
+  }
+  if (taskId) {
+    // Find the task
+    const taskIndex = existingWorkItem.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    if (taskIndex === -1) {
+      return res.status(404).json({
+        message: "Task's not found!",
+      });
+    }
+    existingWorkItem.tasks = existingWorkItem.tasks.filter(
+      (task) => task._id.toString() !== taskId
+    );
+  }
+  const oldImage = existingWorkItem.images.filter(
+    (image) => String(image._id) === imageId
+  )[0];
+  if (imageId && oldImage) {
+    const oldImagePath = path.join(__dirname, "../uploads", oldImage.filename);
+    if (fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath);
+    }
+    // Delete Image from DB
+    existingWorkItem.images = existingWorkItem.images.filter(
+      (img) => String(img._id) !== imageId
+    );
+    // Delete Image tasks
+    existingWorkItem.tasks = existingWorkItem.tasks.filter(
+      (task) => task.image !== imageId
+    );
+    // Delete Image comments
+    existingWorkItem.comments = existingWorkItem.comments.filter(
+      (comment) => comment.image !== imageId
+    );
+  }
+  const currentDocument = existingWorkItem.documents.filter(
+    (doc) => doc._id.toString() === document
+  )[0];
+  if (document && currentDocument) {
+    const oldDocumentPath = path.join(
+      __dirname,
+      "../uploads",
+      currentDocument.title
+    );
+    if (fs.existsSync(oldDocumentPath)) {
+      fs.unlinkSync(oldDocumentPath);
+    }
+    existingWorkItem.documents = existingWorkItem.documents.filter(
+      (doc) => doc._id.toString() !== document
+    );
+  }
+  if (commentId) {
+    const commentIndex = existingWorkItem.comments.findIndex(
+      (comment) => String(comment._id) === commentId
+    );
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: "Comment not found!" });
+    }
+    existingWorkItem.comments = existingWorkItem.comments.filter(
+      (comment) => comment._id.toString() !== commentId
+    );
+  }
+  await existingWorkItem.save();
+  res.status(204).send();
+});
 module.exports = {
   addWorkDetailsItem,
   getAllWorkItems,
@@ -528,6 +753,9 @@ module.exports = {
   addSingleBoq,
   getWorkItemsForContract,
   getWorkItemsNameForContract,
+  createWorkItemDetails,
+  updateWorkItemDetails,
+  deleteWorkItemDetails,
 };
 
 // const deleteBoq = async (req, res) => {

@@ -3,7 +3,7 @@ const {
   addAddition,
   getAdditions,
   deleteAddition,
-} = require("../controllers/additionController");
+} = require("../controllers/additionController.js");
 const { auth } = require("../middlewares/auth.js");
 
 const router = express.Router();
