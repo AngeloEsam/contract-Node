@@ -44,6 +44,31 @@ A **Node.js + Express + MongoDB** based backend for managing **projects, contrac
 
 ---
 
+🛠️ API Endpoints
+🔐 Authentication
+
+POST /api/auth/register → Register user
+POST /api/auth/login → Login user
+
+📂 Projects & Partners
+GET /api/projects → Get projects
+POST /api/projects → Create project
+GET /api/partners → Get partners
+POST /api/partners → Add partner
+
+📑 Contracts & Work
+POST /api/contracts → Create contract
+GET /api/work → Get work items
+POST /api/addition → Add addition
+POST /api/deduction → Add deduction
+POST /api/workConfirmation → Confirm work
+
+🏗️ Materials & Products
+GET /api/materials → Get materials
+GET /api/categories → Get categories
+GET /api/products → Get products
+
+
 ## 🚀 Getting Started
 
 ### 📁 Clone the repository
@@ -56,43 +81,3 @@ cd contracting-b2b
 ##  Run the app
 npm install
 npm start
-
----
-
-### 🛠️ API Endpoints
-**Authentication**
-
-POST /api/auth/register → Register user
-
-POST /api/auth/login → Login user
-
-- **Projects & Partners**
-
-GET /api/projects → Get projects
-
-POST /api/projects → Create project
-
-GET /api/partners → Get partners
-
-POST /api/partners → Add partner
-
-- **Contracts & Work**
-
-POST /api/contracts → Create contract
-
-GET /api/work → Get work items
-
-POST /api/addition → Add addition
-
-POST /api/deduction → Add deduction
-
-POST /api/workConfirmation → Confirm work
-
-- **Materials & Products**
-
-GET /api/materials → Get materials
-
-GET /api/categories → Get categories
-
-GET /api/products → Get products
-
