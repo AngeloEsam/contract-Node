@@ -59,14 +59,14 @@ npm start
 
 ---
 
-## 🛠️ API Endpoints
+### 🛠️ API Endpoints
 **Authentication**
 
 POST /api/auth/register → Register user
 
 POST /api/auth/login → Login user
 
-**Projects & Partners**
+- **Projects & Partners**
 
 GET /api/projects → Get projects
 
@@ -76,7 +76,7 @@ GET /api/partners → Get partners
 
 POST /api/partners → Add partner
 
-**Contracts & Work**
+- **Contracts & Work**
 
 POST /api/contracts → Create contract
 
@@ -88,7 +88,7 @@ POST /api/deduction → Add deduction
 
 POST /api/workConfirmation → Confirm work
 
-**Materials & Products**
+- **Materials & Products**
 
 GET /api/materials → Get materials
 
