@@ -44,29 +44,44 @@ A **Node.js + Express + MongoDB** based backend for managing **projects, contrac
 
 ---
 
-🛠️ API Endpoints
-🔐 Authentication
+## 🛠️ API Endpoints
 
-POST /api/auth/register → Register user
-POST /api/auth/login → Login user
+### 🔐 Authentication
+| Method | Endpoint              | Description   |
+|--------|-----------------------|---------------|
+| POST   | /api/auth/register    | Register user |
+| POST   | /api/auth/login       | Login user    |
 
-📂 Projects & Partners
-GET /api/projects → Get projects
-POST /api/projects → Create project
-GET /api/partners → Get partners
-POST /api/partners → Add partner
+---
 
-📑 Contracts & Work
-POST /api/contracts → Create contract
-GET /api/work → Get work items
-POST /api/addition → Add addition
-POST /api/deduction → Add deduction
-POST /api/workConfirmation → Confirm work
+### 📂 Projects & Partners
+| Method | Endpoint        | Description       |
+|--------|----------------|-------------------|
+| GET    | /api/projects  | Get projects      |
+| POST   | /api/projects  | Create project    |
+| GET    | /api/partners  | Get partners      |
+| POST   | /api/partners  | Add partner       |
 
-🏗️ Materials & Products
-GET /api/materials → Get materials
-GET /api/categories → Get categories
-GET /api/products → Get products
+---
+
+### 📑 Contracts & Work
+| Method | Endpoint              | Description        |
+|--------|-----------------------|--------------------|
+| POST   | /api/contracts        | Create contract    |
+| GET    | /api/work             | Get work items     |
+| POST   | /api/addition         | Add addition       |
+| POST   | /api/deduction        | Add deduction      |
+| POST   | /api/workConfirmation | Confirm work       |
+
+---
+
+### 🏗️ Materials & Products
+| Method | Endpoint        | Description        |
+|--------|----------------|--------------------|
+| GET    | /api/materials  | Get materials      |
+| GET    | /api/categories | Get categories     |
+| GET    | /api/products  | Get products       |
+
 
 
 ## 🚀 Getting Started
